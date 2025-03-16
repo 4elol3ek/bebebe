@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #ifndef MYSIMPLECOMPUTER_H
 #define MYSIMPLECOMPUTER_H
 
@@ -17,6 +19,12 @@ int sc_memoryLoad (const char *filename);
 int sc_regInit (void);
 int sc_regSet (int flag, int value);
 int sc_regGet (int flag, int *value);
+int sc_accumulatorInit (void);
+int sc_accumulatorSet (int value);
+int sc_accumulatorGet (int *value);
+int sc_icounterInit (void);
+int sc_icounterSet (int value);
+int sc_icounterGet (int *value);
 
 /* Команды */
 int sc_commandEncode (int sign, int command, int operand, int *value);

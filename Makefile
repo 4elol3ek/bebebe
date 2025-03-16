@@ -16,7 +16,7 @@ libmysimplecomputer.a: mySimpleComputer/main.o mySimpleComputer/sc_commandEncode
 %.o: %.c
 	@ gcc $(CFLAGS) -c $< -o $@
 
-test: libmysimplecomputer.a console/main.o
+run: libmysimplecomputer.a console/main.o
 	@ gcc $(CFLAGS) console/main.o -Linclude -lmysimplecomputer -o console/main$(EXE)
 	@ ./console/main$(EXE)
 

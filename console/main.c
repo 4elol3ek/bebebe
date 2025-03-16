@@ -1,14 +1,13 @@
-#include "mySimpleComputer.h" // Header file for the mySimpleComputer library
-#include <stdio.h>
+#include "mySimpleComputer.h"
 
 int
 main (void)
 {
   int value;
-  int encoded;
-  int sign, command, operand;
+  int sign, command, operand, acc_value;
   int address, memValue, comm, oper;
 
+  sc_accumulatorInit ();
   if (sc_memoryInit () != 0)
     {
       printf ("Error: Failed to initialize memory.\n");
@@ -55,19 +54,35 @@ main (void)
       return 1;
     }
 
-  if (sc_commandEncode (0, comm, oper, &encoded) != 0)
+  if (sc_commandEncode (0, comm, oper, &acc_value) != 0)
     {
       printf ("Error: Failed to encode command.\n");
       return 1;
     }
-  printf ("Encoded command: %d\n", encoded);
 
-  if (sc_commandDecode (encoded, &sign, &command, &operand) != 0)
+  printf ("Encoded command: %d\n", acc_value);
+  sc_accumulatorSet (acc_value);
+  sc_accumulatorGet (&acc_value);
+  printf ("Accumulate command: %d\n", acc_value);
+
+  sc_accumulatorGet (&acc_value);
+  if (sc_commandDecode (acc_value, &sign, &command, &operand) != 0)
     {
       printf ("Error: Failed to decode command.\n");
       return 1;
     }
   printf ("Decoded command: sign = %d, command = %d, operand = %d\n", sign,
+          command, operand);
+
+  sc_accumulatorGet (&acc_value);
+  printf ("sc_accumulatorSet status : %d\n", acc_value);
+
+  sc_icounterSet (10);
+  printf ("sc_icounterSet status : 0\n");
+
+  sc_memoryGet (0, &memValue);
+  sc_commandDecode (memValue, &sign, &command, &operand);
+  printf ("Decoded value of cell 0: sign=%d, command=%d, operand=%d\n", sign,
           command, operand);
 
   return 0;

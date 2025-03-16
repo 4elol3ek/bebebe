@@ -1,5 +1,4 @@
 #include "mySimpleComputer.h"
-#include <stdio.h>
 
 extern int memory[128];
 
@@ -19,6 +18,7 @@ sc_memoryLoad (const char *filename)
   FILE *f = fopen (filename, "rb");
   if (!f)
     {
+      fclose (f);
       return -1;
     }
   size_t read = fread (memory, sizeof (int), 128, f);
