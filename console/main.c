@@ -41,6 +41,20 @@ main (void)
     }
   printf ("Memory cell %d value: %d\n", address, value);
 
+  int temp_count=0;
+  for (size_t i = 0; i < 13; i++)
+  {
+    for (size_t x = 0; x < 10; x++)
+    {
+      int temp_mem;
+      if (sc_memoryGet(temp_count, &temp_mem) == 0){
+        printf("%d\t", temp_mem);
+      }
+      temp_count+=1;
+    }
+    printf("\n");
+  }
+
   printf ("Enter command code for encoding: ");
   if (scanf ("%d", &comm) != 1)
     {
@@ -59,7 +73,6 @@ main (void)
       printf ("Error: Failed to encode command.\n");
       return 1;
     }
-
   printf ("Encoded command: %d\n", acc_value);
   sc_accumulatorSet (acc_value);
   sc_accumulatorGet (&acc_value);
@@ -77,8 +90,7 @@ main (void)
   sc_accumulatorGet (&acc_value);
   printf ("sc_accumulatorSet status : %d\n", acc_value);
 
-  sc_icounterSet (10);
-  printf ("sc_icounterSet status : 0\n");
+  printf ("sc_icounterSet status : %d\n", sc_icounterSet (10));
 
   sc_memoryGet (0, &memValue);
   sc_commandDecode (memValue, &sign, &command, &operand);
