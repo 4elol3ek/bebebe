@@ -24,5 +24,5 @@ console/main.o: console/main.c
 	@ gcc $(CFLAGS) -c console/main.c -o console/main.o
 
 clean:
-	@ cd console && $(RM) main.o main.exe && cd ../include && $(RM) libmysimplecomputer.a
+	@ cd console && $(RM) main.o main$(EXE) && cd ../include && $(RM) libmysimplecomputer.a
 	@ cd mySimpleComputer && make clean

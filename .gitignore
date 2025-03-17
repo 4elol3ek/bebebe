@@ -1,5 +1,7 @@
+*
+!/**/
+!*.*
 .vscode
 *.o
 *.exe
 *.a
-test
