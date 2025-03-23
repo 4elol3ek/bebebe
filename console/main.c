@@ -1,6 +1,37 @@
 #include "mySimpleComputer.h"
 
 int
+printCell (int address)
+{
+  int value;
+  if (sc_memoryGet (address, &value) == -1)
+    {
+      printf ("ERROR");
+      return -1;
+    }
+
+  char sign = ((value >> 14) == 1) ? '-' : '+';
+  printf ("%c%04X", sign, value);
+  return value;
+}
+
+int
+printMem ()
+{
+  for (int i = 0; i < 128; i++)
+    {
+      printCell (i);
+      printf ("  ");
+      if (((i + 1) % 16 == 0) & (i != 0))
+        {
+          printf ("\n");
+        }
+    }
+  printf ("\n");
+  return 0;
+}
+
+int
 main (void)
 {
   int value;
@@ -41,19 +72,7 @@ main (void)
     }
   printf ("Memory cell %d value: %d\n", address, value);
 
-  int temp_count=0;
-  for (size_t i = 0; i < 13; i++)
-  {
-    for (size_t x = 0; x < 10; x++)
-    {
-      int temp_mem;
-      if (sc_memoryGet(temp_count, &temp_mem) == 0){
-        printf("%d\t", temp_mem);
-      }
-      temp_count+=1;
-    }
-    printf("\n");
-  }
+  printMem ();
 
   printf ("Enter command code for encoding: ");
   if (scanf ("%d", &comm) != 1)

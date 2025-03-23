@@ -7,6 +7,7 @@
 #define FLAG_DIVZERO 0x2
 #define FLAG_OUTOFRANGE 0x4
 #define FLAG_IGNORE 0x8
+#define FLAG_INVALIDCMD 0x10
 
 /* Функции памяти */
 int sc_memoryInit (void);
