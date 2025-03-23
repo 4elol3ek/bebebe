@@ -99,3 +99,26 @@ sc_icounterGet (int *value)
   *value = instruction_counter;
   return 0;
 }
+
+void
+printFlags (void)
+{
+  mt_setfgcolor (1);
+  printf ("%c  %c  %c  %c  %c\n", (reg_flags >> 4) & 1 ? 'E' : '_',
+          (reg_flags >> 3) & 1 ? 'T' : '_', (reg_flags >> 2) & 1 ? 'P' : '_',
+          (reg_flags >> 1) & 1 ? '0' : '_', (reg_flags >> 0) & 1 ? 'M' : '_');
+  mt_setdefaultcolor ();
+}
+
+void
+printAccumulator (void)
+{
+  int value;
+  sc_accumulatorGet (&value);
+  printf ("%04X", value);
+}
+
+void
+printCounters (void)
+{
+}

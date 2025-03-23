@@ -1,26 +1,11 @@
 #include "mySimpleComputer.h"
 
 int
-printCell (int address)
-{
-  int value;
-  if (sc_memoryGet (address, &value) == -1)
-    {
-      printf ("ERROR");
-      return -1;
-    }
-
-  char sign = ((value >> 14) == 1) ? '-' : '+';
-  printf ("%c%04X", sign, value);
-  return value;
-}
-
-int
 printMem ()
 {
   for (int i = 0; i < 128; i++)
     {
-      printCell (i);
+      printCell (i, 6, 0);
       printf ("  ");
       if (((i + 1) % 16 == 0) & (i != 0))
         {
@@ -73,6 +58,14 @@ main (void)
   printf ("Memory cell %d value: %d\n", address, value);
 
   printMem ();
+  mt_setdefaultcolor ();
+  sc_regSet (FLAG_OUTOFRANGE, 1);
+  sc_regSet (FLAG_DIVZERO, 1);
+  sc_regSet (FLAG_OVERFLOW, 1);
+  sc_regSet (FLAG_IGNORE, 1);
+  sc_regSet (FLAG_INVALIDCMD, 1);
+
+  printFlags ();
 
   printf ("Enter command code for encoding: ");
   if (scanf ("%d", &comm) != 1)

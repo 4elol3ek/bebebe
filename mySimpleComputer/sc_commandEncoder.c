@@ -43,3 +43,13 @@ sc_commandDecode (int val, int *sign, int *command, int *operand)
   *operand = val & 0x7F;
   return 0;
 }
+
+void
+printDecodedCommand (int value)
+{
+  int sign, command, operand;
+  char sg = ((value >> 14) == 1) ? '-' : '+';
+  sc_commandDecode (value, &sign, &command, &operand);
+  printf ("%c %3d %3d", sg, command, operand);
+  return;
+}

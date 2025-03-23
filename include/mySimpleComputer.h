@@ -1,3 +1,4 @@
+#include "myTerm.h"
 #include <stdio.h>
 
 #ifndef MYSIMPLECOMPUTER_H
@@ -30,5 +31,12 @@ int sc_icounterGet (int *value);
 /* Команды */
 int sc_commandEncode (int sign, int command, int operand, int *value);
 int sc_commandDecode (int val, int *sign, int *command, int *operand);
+
+/*INOUT Functions*/
+void printFlags (void);
+void printCell (int address, enum colors fg, enum colors bg);
+void printDecodedCommand (int value);
+void printAccumulator (void);
+void printCounters (void);
 
 #endif

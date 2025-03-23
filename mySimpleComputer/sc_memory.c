@@ -18,7 +18,6 @@ sc_memoryLoad (const char *filename)
   FILE *f = fopen (filename, "rb");
   if (!f)
     {
-      fclose (f);
       return -1;
     }
   size_t read = fread (memory, sizeof (int), 128, f);
@@ -59,4 +58,21 @@ sc_memoryGet (int address, int *value)
     }
   *value = memory[address];
   return 0;
+}
+
+void
+printCell (int address, enum colors fg, enum colors bg)
+{
+  mt_setfgcolor (fg);
+  mt_setbgcolor (bg);
+  int value;
+  if (sc_memoryGet (address, &value) == -1)
+    {
+      printf ("ERROR");
+      return;
+    }
+
+  char sign = ((value >> 14) == 1) ? '-' : '+';
+  printf ("%c%04X", sign, value);
+  return;
 }
