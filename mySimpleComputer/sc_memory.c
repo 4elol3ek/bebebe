@@ -42,24 +42,24 @@ int
 sc_memorySet (int address, int value)
 {
   if (value < -16383 || value > 16383)
-  {
-    return -1;
-  }
+    {
+      return -1;
+    }
   else if (address < 0 || address >= 128)
     {
       return -2;
     }
   else if (value < 0)
-  {
-    int temp = value * -1;
-    temp |= 0x4000;
-    printf("%d", temp);
-    memory[address] = temp;
-  }
-  else{
-   memory[address] = value;
-  }
-  
+    {
+      int temp = value * -1;
+      temp |= 0x4000;
+      memory[address] = temp;
+    }
+  else
+    {
+      memory[address] = value;
+    }
+
   return 0;
 };
 
@@ -77,16 +77,16 @@ sc_memoryGet (int address, int *value)
 void
 printCell (int address, enum colors fg, enum colors bg)
 {
-  if (((int)fg >-1) & ((int)fg<8))
-  {
-    mt_setfgcolor (fg);
-  }
+  if (((int)fg > -1) & ((int)fg < 8))
+    {
+      mt_setfgcolor (fg);
+    }
 
-  if (((int)bg >-1) & ((int)bg<8))
-  {
-    mt_setbgcolor (bg);
-  }
-  
+  if (((int)bg > -1) & ((int)bg < 8))
+    {
+      mt_setbgcolor (bg);
+    }
+
   int value;
   if (sc_memoryGet (address, &value) == -1)
     {
@@ -94,8 +94,90 @@ printCell (int address, enum colors fg, enum colors bg)
       return;
     }
 
-  char sign = ((value >> 14) == 1) ? '-' : '+';
-  value = value & 0x3FFF;
+  char sign = ((value >> 14)) ? '-' : '+';
+  value &= 0x3FFF;
   printf ("%c%04X", sign, value);
+  mt_setdefaultcolor ();
+}
+
+void
+printMem (int edit)
+{
+  int BG = BLACK;
+  int FG = WHITE;
+  for (int i = 0; i < 128; i++)
+    {
+      if (i == edit)
+        {
+          printCell (i, BG, FG);
+        }
+      else
+        {
+          printCell (i, FG, BG);
+        }
+      printf ("  ");
+      if (((i + 1) % 16 == 0) & (i != 0))
+        {
+          printf ("\n");
+        }
+    }
+  printf ("\n");
   return;
+}
+
+void
+printBin (int value)
+{
+  int bits = 15;
+  if (value < 0)
+    {
+      value *= -1;
+      value |= 0x4000;
+    }
+  for (int i = bits - 1; i >= 0; i--)
+    {
+      if (i == bits - 1)
+        {
+          mt_setfgcolor (RED);
+        }
+      else if (i >= bits - 8)
+        {
+          mt_setfgcolor (CYAN);
+        }
+      else
+        {
+          mt_setfgcolor (MAGENTA);
+        }
+      printf ("%d", (value >> i) & 1);
+    }
+
+  mt_setdefaultcolor ();
+}
+
+void
+printOct (int value, int type)
+{
+  if (type & value >> 14)
+    {
+      value &= 0x3FFF;
+      printf ("-%05o", value);
+    }
+  else
+    {
+      printf ("+%05o", value);
+    }
+}
+
+void
+printHex (int value, int type)
+{
+  if (type & value >> 14)
+    {
+      value &= 0x3FFF;
+      printf ("-%04X", value);
+    }
+  else
+    {
+      printf ("+%04X", value);
+    }
 }

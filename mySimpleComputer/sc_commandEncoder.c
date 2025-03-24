@@ -48,7 +48,7 @@ void
 printDecodedCommand (int value)
 {
   int sign, command, operand;
-  char sg = ((value >> 14) == 1) ? '-' : '+';
+  char sg = (value >> 14) ? '-' : '+';
   sc_commandDecode (value, &sign, &command, &operand);
   printf ("%c %3d %3d", sg, command, operand);
   return;

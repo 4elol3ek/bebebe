@@ -1,5 +1,7 @@
 #include "myTerm.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #ifndef MYSIMPLECOMPUTER_H
 #define MYSIMPLECOMPUTER_H
@@ -38,5 +40,9 @@ void printCell (int address, enum colors fg, enum colors bg);
 void printDecodedCommand (int value);
 void printAccumulator (void);
 void printCounters (void);
+void printMem (int edit);
+void printBin (int value);
+void printOct (int value, int type);
+void printHex (int value, int type);
 
 #endif
