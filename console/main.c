@@ -5,7 +5,7 @@ printMem ()
 {
   for (int i = 0; i < 128; i++)
     {
-      printCell (i, 6, 0);
+      printCell (i, 2, -1);
       printf ("  ");
       if (((i + 1) % 16 == 0) & (i != 0))
         {
@@ -38,18 +38,22 @@ main (void)
     }
 
   printf ("Enter value for the memory cell: ");
-  if (scanf ("%d", &memValue) != 1)
+  if ((scanf ("%d", &memValue)) != 1)
     {
       printf ("Error: Invalid value.\n");
       return 1;
     }
 
-  if (sc_memorySet (address, memValue) != 0)
+  int temp = sc_memorySet (address, memValue);
+  if (temp == -1)
     {
-      printf ("Error: Failed to set value in memory.\n");
+      printf ("Диапазон данных для ячейки -16384 <-> +16383\n");
       return 1;
     }
-
+  else if (temp == -2)
+   {
+      printf ("Неправильный адрес");
+   }
   if (sc_memoryGet (address, &value) != 0)
     {
       printf ("Error: Failed to retrieve value from memory.\n");
@@ -106,7 +110,7 @@ main (void)
 
   sc_memoryGet (0, &memValue);
   sc_commandDecode (memValue, &sign, &command, &operand);
-  printf ("Decoded value of cell 0: sign=%d, command=%d, operand=%d\n", sign,
+  printf ("Decoded value of cell %d: sign=%d, command=%d, operand=%d\n", memValue, sign,
           command, operand);
 
   return 0;

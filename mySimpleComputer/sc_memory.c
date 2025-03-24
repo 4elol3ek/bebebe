@@ -41,11 +41,25 @@ sc_memorySave (const char *filename)
 int
 sc_memorySet (int address, int value)
 {
-  if (address < 0 || address >= 128)
+  if (value < -16383 || value > 16383)
+  {
+    return -1;
+  }
+  else if (address < 0 || address >= 128)
     {
-      return -1;
+      return -2;
     }
-  memory[address] = value;
+  else if (value < 0)
+  {
+    int temp = value * -1;
+    temp |= 0x4000;
+    printf("%d", temp);
+    memory[address] = temp;
+  }
+  else{
+   memory[address] = value;
+  }
+  
   return 0;
 };
 
@@ -63,8 +77,16 @@ sc_memoryGet (int address, int *value)
 void
 printCell (int address, enum colors fg, enum colors bg)
 {
-  mt_setfgcolor (fg);
-  mt_setbgcolor (bg);
+  if (((int)fg >-1) & ((int)fg<8))
+  {
+    mt_setfgcolor (fg);
+  }
+
+  if (((int)bg >-1) & ((int)bg<8))
+  {
+    mt_setbgcolor (bg);
+  }
+  
   int value;
   if (sc_memoryGet (address, &value) == -1)
     {
@@ -73,6 +95,7 @@ printCell (int address, enum colors fg, enum colors bg)
     }
 
   char sign = ((value >> 14) == 1) ? '-' : '+';
+  value = value & 0x3FFF;
   printf ("%c%04X", sign, value);
   return;
 }
