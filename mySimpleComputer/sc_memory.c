@@ -43,6 +43,7 @@ sc_memorySet (int address, int value)
 {
   if (value < -16383 || value > 16383)
     {
+      sc_regSet (FLAG_OUTOFRANGE, 1);
       return -1;
     }
   else if (address < 0 || address >= 128)
@@ -53,13 +54,15 @@ sc_memorySet (int address, int value)
     {
       int temp = value * -1;
       temp |= 0x4000;
+      temp &= 0x7fff;
       memory[address] = temp;
+      inoutAdd (address, '<', temp);
     }
   else
     {
       memory[address] = value;
+      inoutAdd (address, '<', value);
     }
-
   return 0;
 };
 
@@ -77,6 +80,8 @@ sc_memoryGet (int address, int *value)
 void
 printCell (int address, enum colors fg, enum colors bg)
 {
+  char sign = '+';
+  int value;
   if (((int)fg > -1) & ((int)fg < 8))
     {
       mt_setfgcolor (fg);
@@ -87,15 +92,15 @@ printCell (int address, enum colors fg, enum colors bg)
       mt_setbgcolor (bg);
     }
 
-  int value;
   if (sc_memoryGet (address, &value) == -1)
     {
       printf ("ERROR");
       return;
     }
-
-  char sign = ((value >> 14)) ? '-' : '+';
-  value &= 0x3FFF;
+  if (value >> 14)
+    {
+      sign = '-';
+    }
   printf ("%c%04X", sign, value);
   mt_setdefaultcolor ();
 }
@@ -116,12 +121,14 @@ printMem (int edit)
           printCell (i, FG, BG);
         }
       printf ("  ");
-      if (((i + 1) % 16 == 0) & (i != 0))
+      if (((i + 1) % 10 == 0) & (i != 0))
         {
           printf ("\n");
         }
     }
   printf ("\n");
+  mt_gotoXY (15, 1);
+  printEditCell (edit);
   return;
 }
 
@@ -155,29 +162,45 @@ printBin (int value)
 }
 
 void
-printOct (int value, int type)
+printOct (int value)
 {
-  if (type & value >> 14)
-    {
-      value &= 0x3FFF;
-      printf ("-%05o", value);
-    }
-  else
-    {
-      printf ("+%05o", value);
-    }
+  int res = value;
+  printf ("%04o", res);
 }
 
 void
-printHex (int value, int type)
+printHex (int value)
 {
-  if (type & value >> 14)
+  int res = value;
+  printf ("%04X", res);
+}
+
+void
+printEditCell (int address)
+{
+  int value = 0, temp;
+  sc_memoryGet (address, &value);
+  temp = value;
+  invers (&temp);
+  printf ("dec: %c%05d | oct: ", (temp >> 14) ? '+' : '-', temp + 1);
+  printOct (value);
+  printf (" | hex: ");
+  printHex (value);
+  printf ("\tbin: ");
+  printBin (value);
+}
+
+void
+invers (int *value)
+{
+  int out = 0;
+  for (int i = 0; i < 15; i++)
     {
-      value &= 0x3FFF;
-      printf ("-%04X", value);
+      if (((*value) & (2 ^ i)) == 0)
+        {
+          out += 2 ^ i;
+        }
     }
-  else
-    {
-      printf ("+%04X", value);
-    }
+  out = out & 0x7FFF;
+  *value = out;
 }

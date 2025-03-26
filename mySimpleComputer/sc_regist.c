@@ -50,12 +50,21 @@ sc_accumulatorInit (void)
 int
 sc_accumulatorSet (int value)
 {
-  if (value < 0 || value > 32767)
+  if (value < 0)
+    {
+      int temp = value * -1;
+      temp |= 0x4000;
+      accumulator = temp;
+      return 0;
+    }
+  else if (value > 32736)
     {
       return -1;
     }
-
-  accumulator = value;
+  else
+    {
+      accumulator = value;
+    }
   return 0;
 }
 
@@ -103,22 +112,50 @@ sc_icounterGet (int *value)
 void
 printFlags (void)
 {
+  mt_gotoXY (1, 100);
   mt_setfgcolor (1);
-  printf ("%c  %c  %c  %c  %c\n", (reg_flags >> 4) & 1 ? 'E' : '_',
-          (reg_flags >> 3) & 1 ? 'T' : '_', (reg_flags >> 2) & 1 ? 'P' : '_',
-          (reg_flags >> 1) & 1 ? '0' : '_', (reg_flags >> 0) & 1 ? 'M' : '_');
+  printf ("%c  %c  %c  %c  %c\n", (reg_flags >> 4) & 1 ? 'P' : '_',
+          (reg_flags >> 3) & 1 ? '0' : '_', (reg_flags >> 2) & 1 ? 'M' : '_',
+          (reg_flags >> 1) & 1 ? 'T' : '_', reg_flags & 1 ? 'E' : '_');
   mt_setdefaultcolor ();
 }
 
 void
 printAccumulator (void)
 {
-  int value;
+  mt_gotoXY (1, 72);
+  int value, temp, sign = '+', cmd, oper;
   sc_accumulatorGet (&value);
-  printf ("%04X", value);
+  temp = value;
+  sc_commandDecode (value, &sign, &cmd, &oper);
+  if (value >> 14)
+    {
+      sign = '-';
+      printf ("sc: %c%02X%02X hex: %c%04X", sign, cmd, oper, sign, temp);
+    }
+  else
+    {
+      sign = '+';
+      printf ("sc: %c%02X%02X hex: %c%04X", sign, cmd, oper, sign, temp);
+    }
 }
 
 void
 printCounters (void)
 {
+  mt_gotoXY (3, 72);
+  int value, temp, dec = 0;
+  char sign;
+  sc_icounterGet (&value);
+  if (value >> 14)
+    {
+      temp = value & 0x3fff;
+      sign = '-';
+    }
+  else
+    {
+      temp = value;
+      sign = '+';
+    }
+  printf ("T: %02d\tIC: %c%04X", dec, sign, temp);
 }
