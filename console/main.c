@@ -16,7 +16,6 @@ main (void)
     int value;
   } MemoryData;
 
-  int value;
   MemoryData data[DATA_LEN];
   data[0].address = 0;
   data[0].value = -16383;
@@ -31,7 +30,7 @@ main (void)
   data[5].address = 20;
   data[5].value = -16383;
   data[6].address = 23;
-  data[6].value = -2;
+  data[6].value = -1683;
 
   for (int i = 0; i < DATA_LEN; i++)
     {
@@ -41,9 +40,7 @@ main (void)
         }
     }
 
-  printMem (data[0].address);
-  sc_regSet (FLAG_IGNORE, 1);
-  sc_regSet (FLAG_INVALIDCMD, 1);
+  printMem (data[6].address);
   sc_accumulatorSet (data[0].value);
   printAccumulator ();
   printFlags ();

@@ -53,8 +53,10 @@ sc_memorySet (int address, int value)
   else if (value < 0)
     {
       int temp = value * -1;
+      temp = temp & 0x3FFF;
+      invers (&temp);
       temp |= 0x4000;
-      temp &= 0x7fff;
+      temp += 1;
       memory[address] = temp;
       inoutAdd (address, '<', temp);
     }
@@ -108,6 +110,9 @@ printCell (int address, enum colors fg, enum colors bg)
 void
 printMem (int edit)
 {
+  bc_box (1, 1, 15, 61, WHITE, BLACK, "Оперативная память", RED, BLACK);
+  mt_gotoXY (2, 2);
+  int count = 0;
   int BG = BLACK;
   int FG = WHITE;
   for (int i = 0; i < 128; i++)
@@ -120,16 +125,20 @@ printMem (int edit)
         {
           printCell (i, FG, BG);
         }
-      printf ("  ");
-      if (((i + 1) % 10 == 0) & (i != 0))
+
+      if ((i + 1) % 10 == 0 && i != 0)
         {
-          printf ("\n");
+          count++;
+          mt_gotoXY (2 + count, 2);
+        }
+      else
+        {
+          printf (" ");
         }
     }
-  printf ("\n");
-  mt_gotoXY (15, 1);
+
   printEditCell (edit);
-  return;
+  bc_printeditbig (edit);
 }
 
 void
@@ -178,11 +187,24 @@ printHex (int value)
 void
 printEditCell (int address)
 {
-  int value = 0, temp;
+  int value = 0, sign = 0, temp;
   sc_memoryGet (address, &value);
   temp = value;
-  invers (&temp);
-  printf ("dec: %c%05d | oct: ", (temp >> 14) ? '+' : '-', temp + 1);
+  if (temp >> 14)
+    {
+      sign = 1;
+      temp &= 0x3fff;
+      temp -= 1;
+      invers (&temp);
+    }
+  else
+    {
+      temp &= 0x3fff;
+    }
+  bc_box (16, 1, 3, 61, WHITE, BLACK, "Редактируемая ячейка (формат)", WHITE,
+          YELLOW);
+  mt_gotoXY (17, 2);
+  printf ("dec: %c%05d | oct: ", sign ? '-' : '+', temp);
   printOct (value);
   printf (" | hex: ");
   printHex (value);
@@ -196,11 +218,11 @@ invers (int *value)
   int out = 0;
   for (int i = 0; i < 15; i++)
     {
-      if (((*value) & (2 ^ i)) == 0)
+      if (((*value) & (1 << i)) == 0)
         {
-          out += 2 ^ i;
+          out += (1 << i);
         }
     }
-  out = out & 0x7FFF;
+  out = out & 0x3FFF;
   *value = out;
 }

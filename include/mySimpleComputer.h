@@ -1,3 +1,4 @@
+#include "myBigChars.h"
 #include "myTerm.h"
 #include <stdio.h>
 #include <stdlib.h>

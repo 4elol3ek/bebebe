@@ -112,8 +112,9 @@ sc_icounterGet (int *value)
 void
 printFlags (void)
 {
-  mt_gotoXY (1, 100);
-  mt_setfgcolor (1);
+  bc_box (1, 84, 3, 23, WHITE, BLACK, "Регистор флагов", RED, BLACK);
+  mt_setfgcolor (RED);
+  mt_gotoXY (2, 89);
   printf ("%c  %c  %c  %c  %c\n", (reg_flags >> 4) & 1 ? 'P' : '_',
           (reg_flags >> 3) & 1 ? '0' : '_', (reg_flags >> 2) & 1 ? 'M' : '_',
           (reg_flags >> 1) & 1 ? 'T' : '_', reg_flags & 1 ? 'E' : '_');
@@ -123,11 +124,12 @@ printFlags (void)
 void
 printAccumulator (void)
 {
-  mt_gotoXY (1, 72);
   int value, temp, sign = '+', cmd, oper;
   sc_accumulatorGet (&value);
   temp = value;
   sc_commandDecode (value, &sign, &cmd, &oper);
+  bc_box (1, 62, 3, 22, WHITE, BLACK, "Аккумулятор", RED, BLACK);
+  mt_gotoXY (2, 63);
   if (value >> 14)
     {
       sign = '-';
@@ -143,10 +145,11 @@ printAccumulator (void)
 void
 printCounters (void)
 {
-  mt_gotoXY (3, 72);
   int value, temp, dec = 0;
   char sign;
   sc_icounterGet (&value);
+  bc_box (4, 62, 3, 22, WHITE, BLACK, "Счетчик команд", RED, BLACK);
+  mt_gotoXY (5, 63);
   if (value >> 14)
     {
       temp = value & 0x3fff;
