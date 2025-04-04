@@ -30,7 +30,7 @@ main (void)
   data[5].address = 20;
   data[5].value = -16383;
   data[6].address = 23;
-  data[6].value = -1683;
+  data[6].value = 13926;
 
   for (int i = 0; i < DATA_LEN; i++)
     {

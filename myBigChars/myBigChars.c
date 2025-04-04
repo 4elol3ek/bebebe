@@ -126,102 +126,101 @@ bc_box (int x1, int y1, int x2, int y2, enum colors box_fg, enum colors box_bg,
       printf ("%s", header);
       fflush (stdout);
     }
-    
-    mt_setdefaultcolor ();
-    return 0;
-  }
-  
-  int
-  bc_setbigcharpos (int *big, int x, int y, int value)
-  {
-    if (!big || x < 0 || x > 7 || y < 0 || y > 7 || (value != 0 && value != 1))
+
+  mt_setdefaultcolor ();
+  return 0;
+}
+
+int
+bc_setbigcharpos (int *big, int x, int y, int value)
+{
+  if (!big || x < 0 || x > 7 || y < 0 || y > 7 || (value != 0 && value != 1))
     return -1;
-    int pos = x * 8 + y;
-    if (pos < 32)
+  int pos = x * 8 + y;
+  if (pos < 32)
     {
       if (value)
-      big[0] |= (1 << pos);
+        big[0] |= (1 << pos);
       else
-      big[0] &= ~(1 << pos);
+        big[0] &= ~(1 << pos);
     }
-    else
+  else
     {
       pos -= 32;
       if (value)
-      big[1] |= (1 << pos);
+        big[1] |= (1 << pos);
       else
-      big[1] &= ~(1 << pos);
+        big[1] &= ~(1 << pos);
     }
-    return 0;
-  }
-  
-  int
-  bc_getbigcharpos (int *big, int x, int y, int *value)
-  {
-    if (!big || !value || x < 0 || x > 7 || y < 0 || y > 7)
+  return 0;
+}
+
+int
+bc_getbigcharpos (int *big, int x, int y, int *value)
+{
+  if (!big || !value || x < 0 || x > 7 || y < 0 || y > 7)
     return -1;
-    int pos = x * 8 + y;
-    if (pos < 32)
+  int pos = x * 8 + y;
+  if (pos < 32)
     {
       *value = (big[0] >> pos) & 1;
     }
-    else
+  else
     {
       pos -= 32;
       *value = (big[1] >> pos) & 1;
     }
-    return 0;
-  }
-  
-  int
-  bc_printbigchar (int big[2], int x, int y, enum colors fg, enum colors bg)
-  {
-    int bit = 0;
-    if (!big)
+  return 0;
+}
+
+int
+bc_printbigchar (int big[2], int x, int y, enum colors fg, enum colors bg)
+{
+  int bit = 0;
+  if (!big)
     return -1;
-    for (int i = 0; i < 8; i++)
+  for (int i = 0; i < 8; i++)
     {
       mt_gotoXY (x + i, y);
       mt_setfgcolor (fg);
       mt_setbgcolor (bg);
       for (int j = 0; j < 8; j++)
-      {
-        bc_getbigcharpos (big, i, j, &bit);
-        if (bit)
-        bc_printA (ACS_CKBOARD);
-        else
-        printf (" ");
-        fflush (stdout);
-      }
+        {
+          bc_getbigcharpos (big, i, j, &bit);
+          if (bit)
+            bc_printA (ACS_CKBOARD);
+          else
+            printf (" ");
+          fflush (stdout);
+        }
     }
-    mt_setdefaultcolor ();
-    return 0;
-  }
-  
-  int
-  bc_bigcharwrite (int fd, int *big, int count)
-  {
-    if (fd < 0 || !big || count <= 0)
+  mt_setdefaultcolor ();
+  return 0;
+}
+
+int
+bc_bigcharwrite (int fd, int *big, int count)
+{
+  if (fd < 0 || !big || count <= 0)
     return -1;
-    ssize_t bytes = write (fd, big, count * 2 * sizeof (int));
-    if (bytes < count * 2 * (ssize_t)sizeof (int))
+  ssize_t bytes = write (fd, big, count * 2 * sizeof (int));
+  if (bytes < count * 2 * (ssize_t)sizeof (int))
     return -1;
-    return 0;
-  }
-  
-  int
-  bc_bigcharread (int fd, int *big, int need_count, int *count)
-  {
-    if (fd < 0 || !big || need_count <= 0 || !count)
+  return 0;
+}
+
+int
+bc_bigcharread (int fd, int *big, int need_count, int *count)
+{
+  if (fd < 0 || !big || need_count <= 0 || !count)
     return -1;
-    ssize_t bytes = read (fd, big, need_count * 2 * sizeof (int));
-    if (bytes < 0)
+  ssize_t bytes = read (fd, big, need_count * 2 * sizeof (int));
+  if (bytes < 0)
     return -1;
-    *count = bytes / (2 * sizeof (int));
-    return 0;
-  }
-  
-  
+  *count = bytes / (2 * sizeof (int));
+  return 0;
+}
+
 int
 bc_printeditbig (int address)
 {
