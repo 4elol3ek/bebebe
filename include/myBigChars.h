@@ -23,5 +23,6 @@ int bc_printbigchar (int big[2], int x, int y, enum colors fg, enum colors bg);
 int bc_bigcharwrite (int fd, int *big, int count);
 int bc_bigcharread (int fd, int *big, int need_count, int *count);
 int bc_printeditbig (int address);
-
+int printHints (void);
+int printCache (void);
 #endif // MYBIGCHARS_H

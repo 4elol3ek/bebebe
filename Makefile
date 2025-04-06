@@ -6,7 +6,7 @@ else
     EXE =
 endif
 
-CFLAGS = -Wall -Wextra -std=c11 -O2 -Iinclude
+CFLAGS = -Wall -Wextra -std=c11 -O3 -Iinclude
 target = main
 
 all: libmysimplecomputer.a libmyterm.a libmybigchars.a

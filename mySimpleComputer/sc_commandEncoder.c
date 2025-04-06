@@ -111,14 +111,15 @@ inoutAdd (int address, char type, int value)
 void
 printInOut (void)
 {
-  bc_box (19, 68, 7, 12, WHITE, BLACK, "IN--OUT", RED, BLACK);
+  int row = 19, col = 66;
+  bc_box (row, col, 7, 12, WHITE, BLACK, "IN--OUT", RED, BLACK);
   for (int i = 0; i < inoutCount; i++)
     {
       int address = inoutBuf[i].address;
       char type = inoutBuf[i].type;
       int value = inoutBuf[i].value;
 
-      mt_gotoXY (20 + i, 69);
+      mt_gotoXY (row + 1 + i, col + 1);
       printf ("%03d%c %c", address, type, (value >> 14) ? '-' : '+');
       printHex (value);
     }

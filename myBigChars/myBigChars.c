@@ -20,12 +20,12 @@ int bigchars[18][2] = {
   { 0x7EC3C37E, 0x7EC3C3C3 }, // 8
   { 0xC3C3C37E, 0x7EC0C0FE }, // 9
   { 0xC3C36618, 0xC3C3FFC3 }, // A
-  { 0x1F63637F, 0x7F63631F }, // B
+  { 0x1F63637F, 0x7F636363 }, // B
   { 0x03C3C37E, 0x7EC3C303 }, // C
   { 0xC3C3C37F, 0x7FC3C3C3 }, // D
   { 0xFF0303FF, 0xFF030303 }, // E
   { 0xFF0303FF, 0x03030303 }, // F
-  { 0xFF181818, 0x18181818 }, // +
+  { 0x18FF1818, 0x18181818 }, // +
   { 0x00000000, 0x000000FF }  // -
 };
 
@@ -258,5 +258,31 @@ bc_printeditbig (int address)
       bc_printbigchar (bigchars[digits[i]], x, y + i * 9, fg, bg);
     }
 
+  return 0;
+}
+
+int
+printHints (void)
+{
+  int row = 19, col = 78;
+  bc_box (row, col, 7, 29, WHITE, BLACK, "Клавиши", RED, BLACK);
+  mt_gotoXY (row + 1, col + 1);
+  printf ("l - load s - save i - reset");
+  mt_gotoXY (row + 2, col + 1);
+  printf ("r - run t - step");
+  mt_gotoXY (row + 3, col + 1);
+  printf ("ESC - выход");
+  mt_gotoXY (row + 4, col + 1);
+  printf ("F5 - accumulator");
+  mt_gotoXY (row + 5, col + 1);
+  printf ("F6 - instruction counter");
+  return 0;
+}
+
+int
+printCache (void)
+{
+  int row = 19, col = 1;
+  bc_box (row, col, 7, 65, WHITE, BLACK, "Кеш процессора", RED, BLACK);
   return 0;
 }

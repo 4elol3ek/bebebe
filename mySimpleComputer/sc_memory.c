@@ -174,7 +174,7 @@ void
 printOct (int value)
 {
   int res = value;
-  printf ("%04o", res);
+  printf ("%05o", res);
 }
 
 void
