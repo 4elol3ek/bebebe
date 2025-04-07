@@ -16,7 +16,7 @@ int bigchars[18][2] = {
   { 0xFFC3C3C3, 0xC0C0C0C0 }, // 4
   { 0x7E0303FF, 0x3FC0C0C0 }, // 5
   { 0x7F03037E, 0x7EC3C3C3 }, // 6
-  { 0x0C0C30FF, 0x0C0C0C0C }, // 7
+  { 0x3060C0FF, 0x0C0C0C18 }, // 7
   { 0x7EC3C37E, 0x7EC3C3C3 }, // 8
   { 0xC3C3C37E, 0x7EC0C0FE }, // 9
   { 0xC3C36618, 0xC3C3FFC3 }, // A
@@ -224,26 +224,24 @@ bc_bigcharread (int fd, int *big, int need_count, int *count)
 int
 bc_printeditbig (int address)
 {
-  int value = 0;
+  int value = 0, com, op, sign;
   if (sc_memoryGet (address, &value) != 0)
     return -1;
-
+  sc_commandDecode(value, &sign, &com, &op);
   mt_setbgcolor (BLACK);
   mt_setfgcolor (WHITE);
 
   int fg = MAGENTA, bg = BLACK;
 
-  bc_box (7, 62, 12, 45, WHITE, BLACK, "Редактируемая ячейка (увеличино)",
+  bc_box (7, 62, 12, 45, WHITE, BLACK, "Редактируемая ячейка (увеличено)",
           WHITE, YELLOW);
 
-  int sign = (value >> 14) & 0x1;
-  int raw = value & 0x7FFF;
 
   int digits[4];
-  digits[3] = (raw >> 0) & 0xF;
-  digits[2] = (raw >> 4) & 0xF;
-  digits[1] = (raw >> 8) & 0xF;
-  digits[0] = (raw >> 12) & 0xF;
+  digits[3] = (op >> 0) & 0xF;
+  digits[2] = (op >> 4) & 0xF;
+  digits[1] = (com >> 0) & 0xF;
+  digits[0] = (com >> 4) & 0xF;
 
   int x = 9, y = 63;
 

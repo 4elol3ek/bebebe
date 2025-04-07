@@ -58,12 +58,12 @@ sc_memorySet (int address, int value)
       temp |= 0x4000;
       temp += 1;
       memory[address] = temp;
-      inoutAdd (address, '<', temp);
+      inoutAdd (address, '>', temp);
     }
   else
     {
       memory[address] = value;
-      inoutAdd (address, '<', value);
+      inoutAdd (address, '>', value);
     }
   return 0;
 };
@@ -83,7 +83,7 @@ void
 printCell (int address, enum colors fg, enum colors bg)
 {
   char sign = '+';
-  int value;
+  int value, com, op;
   if (((int)fg > -1) & ((int)fg < 8))
     {
       mt_setfgcolor (fg);
@@ -99,11 +99,8 @@ printCell (int address, enum colors fg, enum colors bg)
       printf ("ERROR");
       return;
     }
-  if (value >> 14)
-    {
-      sign = '-';
-    }
-  printf ("%c%04X", sign, value);
+  sc_commandDecode(value, &sign, &com, &op);
+  printf ("%c%02X%02X", sign?'-':'+', com, op);
   mt_setdefaultcolor ();
 }
 
@@ -136,7 +133,7 @@ printMem (int edit)
           printf (" ");
         }
     }
-
+  sc_icounterSet (edit);
   printEditCell (edit);
   bc_printeditbig (edit);
 }

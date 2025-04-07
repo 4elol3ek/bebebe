@@ -7,7 +7,8 @@ main (void)
   srand ((unsigned int)time (NULL)); // Инициализация rand
   sc_accumulatorInit ();
   sc_icounterInit ();
-  sc_icounterSet (23);
+  sc_regInit ();
+  sc_regSet (FLAG_IGNORE, 1);
   mt_clrscr ();
 
   typedef struct
@@ -30,7 +31,7 @@ main (void)
   data[5].address = 20;
   data[5].value = -16383;
   data[6].address = 23;
-  data[6].value = -2;
+  data[6].value = -1;
 
   for (int i = 0; i < DATA_LEN; i++)
     {
@@ -40,7 +41,7 @@ main (void)
         }
     }
 
-  printMem (data[6].address);
+  printMem (23);
   sc_accumulatorSet (data[0].value);
   printAccumulator ();
   printFlags ();

@@ -89,11 +89,14 @@ sc_icounterInit (void)
 int
 sc_icounterSet (int value)
 {
-  if (value < 0 || value > 128)
+  if (value > 128)
     {
+      sc_regSet(FLAG_OVERFLOW, 1);
       return -1;
     }
-
+  else if (value < 0){
+      return -1;
+  }
   instruction_counter = value;
   return 0;
 }
@@ -112,7 +115,7 @@ sc_icounterGet (int *value)
 void
 printFlags (void)
 {
-  bc_box (1, 84, 3, 23, WHITE, BLACK, "Регистор флагов", RED, BLACK);
+  bc_box (1, 84, 3, 23, WHITE, BLACK, "Регистр флагов", RED, BLACK);
   mt_setfgcolor (RED);
   mt_gotoXY (2, 89);
   printf ("%c  %c  %c  %c  %c\n", (reg_flags >> 4) & 1 ? 'P' : '_',
@@ -145,20 +148,18 @@ printAccumulator (void)
 void
 printCounters (void)
 {
-  int value, temp, dec = 0;
+  int value, dec = 0;
   char sign;
   sc_icounterGet (&value);
   bc_box (4, 62, 3, 22, WHITE, BLACK, "Счетчик команд", RED, BLACK);
   mt_gotoXY (5, 63);
   if (value >> 14)
     {
-      temp = value & 0x3fff;
       sign = '-';
     }
   else
     {
-      temp = value;
       sign = '+';
     }
-  printf ("T: %02d\tIC: %c%04X", dec, sign, temp);
+  printf ("T: %02d\tIC: %c%04X", dec, sign, value);
 }
