@@ -2,7 +2,6 @@
 #include "mySimpleComputer.h"
 #include "myTerm.h"
 #include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +13,7 @@ int bigchars[18][2] = {
   { 0xC0C3663C, 0xFF061860 }, // 2
   { 0x7EC0C07E, 0x7EC0C0C0 }, // 3
   { 0xFFC3C3C3, 0xC0C0C0C0 }, // 4
-  { 0x7E0303FF, 0x3FC0C0C0 }, // 5
+  { 0x7F0303FF, 0x7FC0C0C0 }, // 5
   { 0x7F03037E, 0x7EC3C3C3 }, // 6
   { 0x3060C0FF, 0x0C0C0C18 }, // 7
   { 0x7EC3C37E, 0x7EC3C3C3 }, // 8
@@ -22,7 +21,7 @@ int bigchars[18][2] = {
   { 0xC3C36618, 0xC3C3FFC3 }, // A
   { 0x1F63637F, 0x7F636363 }, // B
   { 0x03C3C37E, 0x7EC3C303 }, // C
-  { 0xC3C3C37F, 0x7FC3C3C3 }, // D
+  { 0xC3C3633F, 0x3F63C3C3 }, // D
   { 0xFF0303FF, 0xFF030303 }, // E
   { 0xFF0303FF, 0x03030303 }, // F
   { 0x18FF1818, 0x18181818 }, // +
@@ -90,7 +89,8 @@ bc_box (int x1, int y1, int x2, int y2, enum colors box_fg, enum colors box_bg,
     }
 
   mt_setfgcolor (box_fg);
-  mt_setbgcolor (box_bg);
+  if (box_bg)
+    mt_setbgcolor (box_bg);
 
   mt_gotoXY (x1, y1);
   bc_printA (ACS_ULCORNER);
@@ -122,7 +122,8 @@ bc_box (int x1, int y1, int x2, int y2, enum colors box_fg, enum colors box_bg,
       int start = y1 + (y2 - header_len) / 2;
       mt_gotoXY (x1, start);
       mt_setfgcolor (header_fg);
-      mt_setbgcolor (header_bg);
+      if (box_bg)
+        mt_setbgcolor (header_bg);
       printf ("%s", header);
       fflush (stdout);
     }
@@ -183,7 +184,8 @@ bc_printbigchar (int big[2], int x, int y, enum colors fg, enum colors bg)
     {
       mt_gotoXY (x + i, y);
       mt_setfgcolor (fg);
-      mt_setbgcolor (bg);
+      if (bg)
+        mt_setbgcolor (bg);
       for (int j = 0; j < 8; j++)
         {
           bc_getbigcharpos (big, i, j, &bit);
@@ -227,15 +229,12 @@ bc_printeditbig (int address)
   int value = 0, com, op, sign;
   if (sc_memoryGet (address, &value) != 0)
     return -1;
-  sc_commandDecode(value, &sign, &com, &op);
-  mt_setbgcolor (BLACK);
-  mt_setfgcolor (WHITE);
+  sc_commandDecode (value, &sign, &com, &op);
 
   int fg = MAGENTA, bg = BLACK;
 
   bc_box (7, 62, 12, 45, WHITE, BLACK, "Редактируемая ячейка (увеличено)",
           WHITE, YELLOW);
-
 
   int digits[4];
   digits[3] = (op >> 0) & 0xF;
@@ -256,31 +255,5 @@ bc_printeditbig (int address)
       bc_printbigchar (bigchars[digits[i]], x, y + i * 9, fg, bg);
     }
 
-  return 0;
-}
-
-int
-printHints (void)
-{
-  int row = 19, col = 78;
-  bc_box (row, col, 7, 29, WHITE, BLACK, "Клавиши", RED, BLACK);
-  mt_gotoXY (row + 1, col + 1);
-  printf ("l - load s - save i - reset");
-  mt_gotoXY (row + 2, col + 1);
-  printf ("r - run t - step");
-  mt_gotoXY (row + 3, col + 1);
-  printf ("ESC - выход");
-  mt_gotoXY (row + 4, col + 1);
-  printf ("F5 - accumulator");
-  mt_gotoXY (row + 5, col + 1);
-  printf ("F6 - instruction counter");
-  return 0;
-}
-
-int
-printCache (void)
-{
-  int row = 19, col = 1;
-  bc_box (row, col, 7, 65, WHITE, BLACK, "Кеш процессора", RED, BLACK);
   return 0;
 }

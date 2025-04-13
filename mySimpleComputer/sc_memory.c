@@ -1,4 +1,11 @@
+#include "myReadKey.h"
 #include "mySimpleComputer.h"
+#include "myTerm.h"
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <termios.h>
+#include <unistd.h>
 
 extern int memory[128];
 
@@ -76,150 +83,43 @@ sc_memoryGet (int address, int *value)
       return -1;
     }
   *value = memory[address];
+  inoutAdd (address, '<', *value);
   return 0;
 }
 
 void
-printCell (int address, enum colors fg, enum colors bg)
+sc_editcurrentcell (int address)
 {
-  char sign = '+';
-  int value, com, op;
-  if (((int)fg > -1) & ((int)fg < 8))
+  int val;
+  int row = (address / 10) + 2;
+  int col = (address % 10) * 6 + 2;
+
+  struct termios oldt, newt;
+  tcgetattr (STDIN_FILENO, &oldt);
+  newt = oldt;
+  newt.c_lflag |= (ICANON | ECHO);
+  tcsetattr (STDIN_FILENO, TCSANOW, &newt);
+
+  mt_gotoXY (row, col);
+  mt_setbgcolor (WHITE);
+  mt_setfgcolor (BLACK);
+  printf ("     ");
+  mt_gotoXY (row, col);
+  fflush (stdout);
+
+  char buf[16];
+  if (fgets (buf, sizeof (buf), stdin) != NULL)
     {
-      mt_setfgcolor (fg);
+      val = atoi (buf);
+      sc_memorySet (address, val);
+
+      mt_setbgcolor (BLACK);
+      mt_setfgcolor (WHITE);
+      mt_gotoXY (row, col);
+      printf ("+%04X", (unsigned short)(val & 0x3FFF));
     }
 
-  if (((int)bg > -1) & ((int)bg < 8))
-    {
-      mt_setbgcolor (bg);
-    }
-
-  if (sc_memoryGet (address, &value) == -1)
-    {
-      printf ("ERROR");
-      return;
-    }
-  sc_commandDecode(value, &sign, &com, &op);
-  printf ("%c%02X%02X", sign?'-':'+', com, op);
+  tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
   mt_setdefaultcolor ();
-}
-
-void
-printMem (int edit)
-{
-  bc_box (1, 1, 15, 61, WHITE, BLACK, "Оперативная память", RED, BLACK);
-  mt_gotoXY (2, 2);
-  int count = 0;
-  int BG = BLACK;
-  int FG = WHITE;
-  for (int i = 0; i < 128; i++)
-    {
-      if (i == edit)
-        {
-          printCell (i, BG, FG);
-        }
-      else
-        {
-          printCell (i, FG, BG);
-        }
-
-      if ((i + 1) % 10 == 0 && i != 0)
-        {
-          count++;
-          mt_gotoXY (2 + count, 2);
-        }
-      else
-        {
-          printf (" ");
-        }
-    }
-  sc_icounterSet (edit);
-  printEditCell (edit);
-  bc_printeditbig (edit);
-}
-
-void
-printBin (int value)
-{
-  int bits = 15;
-  if (value < 0)
-    {
-      value *= -1;
-      value |= 0x4000;
-    }
-  for (int i = bits - 1; i >= 0; i--)
-    {
-      if (i == bits - 1)
-        {
-          mt_setfgcolor (RED);
-        }
-      else if (i >= bits - 8)
-        {
-          mt_setfgcolor (CYAN);
-        }
-      else
-        {
-          mt_setfgcolor (MAGENTA);
-        }
-      printf ("%d", (value >> i) & 1);
-    }
-
-  mt_setdefaultcolor ();
-}
-
-void
-printOct (int value)
-{
-  int res = value;
-  printf ("%05o", res);
-}
-
-void
-printHex (int value)
-{
-  int res = value;
-  printf ("%04X", res);
-}
-
-void
-printEditCell (int address)
-{
-  int value = 0, sign = 0, temp;
-  sc_memoryGet (address, &value);
-  temp = value;
-  if (temp >> 14)
-    {
-      sign = 1;
-      temp &= 0x3fff;
-      temp -= 1;
-      invers (&temp);
-    }
-  else
-    {
-      temp &= 0x3fff;
-    }
-  bc_box (16, 1, 3, 61, WHITE, BLACK, "Редактируемая ячейка (формат)", WHITE,
-          YELLOW);
-  mt_gotoXY (17, 2);
-  printf ("dec: %c%05d | oct: ", sign ? '-' : '+', temp);
-  printOct (value);
-  printf (" | hex: ");
-  printHex (value);
-  printf ("\tbin: ");
-  printBin (value);
-}
-
-void
-invers (int *value)
-{
-  int out = 0;
-  for (int i = 0; i < 15; i++)
-    {
-      if (((*value) & (1 << i)) == 0)
-        {
-          out += (1 << i);
-        }
-    }
-  out = out & 0x3FFF;
-  *value = out;
+  fflush (stdout);
 }

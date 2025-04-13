@@ -1,9 +1,3 @@
-#include "myBigChars.h"
-#include "myTerm.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
 #ifndef MYSIMPLECOMPUTER_H
 #define MYSIMPLECOMPUTER_H
 
@@ -21,6 +15,7 @@ int sc_memorySet (int address, int value);
 int sc_memoryGet (int address, int *value);
 int sc_memorySave (const char *filename);
 int sc_memoryLoad (const char *filename);
+void sc_editcurrentcell (int address);
 
 /* Функции регистров */
 int sc_regInit (void);
@@ -37,20 +32,6 @@ int sc_icounterGet (int *value);
 int sc_commandEncode (int sign, int command, int operand, int *value);
 int sc_commandDecode (int value, int *sign, int *command, int *operand);
 void inoutAdd (int address, char type, int value);
-
-/*INOUT Functions*/
-void printFlags (void);
-void printCell (int address, enum colors fg, enum colors bg);
-void printCMD (void);
-void printDecodedCommand (int value);
-void printAccumulator (void);
-void printCounters (void);
-void printMem (int edit);
-void printBin (int value);
-void printOct (int value);
-void printHex (int value);
-void printEditCell (int address);
-void printInOut (void);
 void invers (int *value);
 
 typedef struct
