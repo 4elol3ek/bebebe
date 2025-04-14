@@ -12,7 +12,7 @@
 /* Функции памяти */
 int sc_memoryInit (void);
 int sc_memorySet (int address, int value);
-int sc_memoryGet (int address, int *value);
+int sc_memoryGet (int address, int *value, int inout);
 int sc_memorySave (const char *filename);
 int sc_memoryLoad (const char *filename);
 void sc_editcurrentcell (int address);
@@ -32,7 +32,10 @@ int sc_icounterGet (int *value);
 int sc_commandEncode (int sign, int command, int operand, int *value);
 int sc_commandDecode (int value, int *sign, int *command, int *operand);
 void inoutAdd (int address, char type, int value);
+void sc_editaccumulator (void);
+void sc_editicounter (void);
 void invers (int *value);
+
 
 typedef struct
 {

@@ -95,26 +95,26 @@ printCMD (void)
   mt_gotoXY (5, 90);
   if (sc_icounterGet (&ic) != 0)
     {
-      printf ("! +FF : FF");
+      printf ("!+FF : FF");
       return;
     }
 
-  if (ic < 0 || ic >= 100)
+  if (ic < 0 || ic >= 128)
     {
-      printf ("! +FF : FF");
+      printf ("!+FF : FF");
       return;
     }
 
   int value;
-  if (sc_memoryGet (ic, &value) != 0)
+  if (sc_memoryGet (ic, &value, 0) != 0)
     {
-      printf ("! +FF : FF");
+      printf ("!+FF : FF");
       return;
     }
   int sign, cmd, operand;
   if (sc_commandDecode (value, &sign, &cmd, &operand) != 0)
     {
-      printf ("! +FF : FF");
+      printf ("!+FF : FF");
       return;
     }
   char s = (sign == 0) ? '+' : '-';
@@ -170,7 +170,7 @@ printCell (int address, enum colors fg, enum colors bg)
         mt_setbgcolor (bg);
     }
 
-  if (sc_memoryGet (address, &value) == -1)
+  if (sc_memoryGet (address, &value, 0) == -1)
     {
       printf ("ERROR");
       return;
@@ -261,7 +261,7 @@ void
 printEditCell (int address)
 {
   int value = 0, sign = 0, temp;
-  sc_memoryGet (address, &value);
+  sc_memoryGet (address, &value, 0);
   temp = value;
   if (temp >> 14)
     {

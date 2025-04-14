@@ -1,4 +1,4 @@
-#include "myReadkey.h"
+#include "myReadKey.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

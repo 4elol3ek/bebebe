@@ -13,13 +13,14 @@ int
 printInterface (int cell)
 {
   printMem (cell);
+  sc_icounterSet(cell);
   printAccumulator ();
   printFlags ();
   printCounters ();
   printCMD ();
   printInOut ();
   printCache ();
-  mt_gotoXY (30, 1);
+  mt_gotoXY (27, 1);
   fflush (stdout);
   return 0;
 }
@@ -28,10 +29,12 @@ int
 main (void)
 {
   srand ((unsigned int)time (NULL));
-
+  
+  sc_regInit();
   sc_memoryInit ();
   sc_accumulatorInit ();
   sc_icounterInit ();
+  sc_regSet(FLAG_IGNORE,1);
 
   printHints ();
 
@@ -70,13 +73,16 @@ main (void)
       switch (key)
         {
         case KEY_UP:
-          if (cell != 8 || cell != 9)
-            cell = (cell - 10 + (MEM_SIZE + 2)) % (MEM_SIZE + 2);
-          else if (cell == 8 || cell == 9)
+          if (cell == 8 || cell == 9)
             cell += 110;
+          else
+            cell = (cell - 10 + (MEM_SIZE + 2)) % (MEM_SIZE + 2);
           break;
         case KEY_DOWN:
-          cell = (cell + 10) % (MEM_SIZE + 2);
+          if (cell == 118 || cell == 119)
+            cell-=110;
+          else
+            cell = (cell + 10) % (MEM_SIZE + 2);
           break;
         case KEY_LEFT:
           cell = (cell - 1 + MEM_SIZE) % MEM_SIZE;
@@ -93,18 +99,10 @@ main (void)
           printHints ();
           break;
         case KEY_F5:
-          {
-            int acc;
-            if (rk_readvalue (&acc, 5) == 0)
-              sc_accumulatorSet (acc);
-          }
+          sc_editaccumulator ();
           break;
         case KEY_F6:
-          {
-            int ic;
-            if (rk_readvalue (&ic, 5) == 0)
-              sc_icounterSet (ic);
-          }
+          sc_editicounter ();
           break;
         case KEY_L:
           mt_gotoXY (26, 1);
@@ -122,6 +120,7 @@ main (void)
           sc_memoryInit ();
           sc_accumulatorSet (0);
           sc_icounterSet (0);
+          sc_regInit();
           break;
         case KEY_ESC:
           exitFlag = 1;

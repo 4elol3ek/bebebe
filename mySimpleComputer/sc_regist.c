@@ -90,13 +90,9 @@ sc_icounterInit (void)
 int
 sc_icounterSet (int value)
 {
-  if (value > 128)
+  if (value > 128 || value < 0)
     {
       sc_regSet (FLAG_OVERFLOW, 1);
-      return -1;
-    }
-  else if (value < 0)
-    {
       return -1;
     }
   instruction_counter = value;

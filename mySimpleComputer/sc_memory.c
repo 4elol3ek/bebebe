@@ -76,14 +76,14 @@ sc_memorySet (int address, int value)
 };
 
 int
-sc_memoryGet (int address, int *value)
+sc_memoryGet (int address, int *value, int inout)
 {
   if (value == NULL || address < 0 || address >= 128)
     {
       return -1;
     }
   *value = memory[address];
-  inoutAdd (address, '<', *value);
+  if (inout) inoutAdd (address, '<', *value);
   return 0;
 }
 
@@ -116,6 +116,74 @@ sc_editcurrentcell (int address)
       mt_setbgcolor (BLACK);
       mt_setfgcolor (WHITE);
       mt_gotoXY (row, col);
+      printf ("+%04X", (unsigned short)(val & 0x3FFF));
+    }
+
+  tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
+  mt_setdefaultcolor ();
+  fflush (stdout);
+}
+
+void
+sc_editaccumulator (void)
+{
+  int val;
+
+  struct termios oldt, newt;
+  tcgetattr (STDIN_FILENO, &oldt);
+  newt = oldt;
+  newt.c_lflag |= (ICANON | ECHO);
+  tcsetattr (STDIN_FILENO, TCSANOW, &newt);
+
+  mt_gotoXY (5, 77);
+  mt_setbgcolor (WHITE);
+  mt_setfgcolor (BLACK);
+  printf ("     ");
+  mt_gotoXY (5, 77);
+  fflush (stdout);
+
+  char buf[16];
+  if (fgets (buf, sizeof (buf), stdin) != NULL)
+    {
+      val = atoi (buf);
+      sc_accumulatorSet(val);
+      mt_setbgcolor (BLACK);
+      mt_setfgcolor (WHITE);
+      mt_gotoXY (5, 77);
+      printf ("+%04X", (unsigned short)(val & 0x3FFF));
+    }
+
+  tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
+  mt_setdefaultcolor ();
+  fflush (stdout);
+}
+
+void
+sc_editicounter (void)
+{
+  int val;
+
+  struct termios oldt, newt;
+  tcgetattr (STDIN_FILENO, &oldt);
+  newt = oldt;
+  newt.c_lflag |= (ICANON | ECHO);
+  tcsetattr (STDIN_FILENO, TCSANOW, &newt);
+
+  mt_gotoXY (5, 77);
+  mt_setbgcolor (WHITE);
+  mt_setfgcolor (BLACK);
+  printf ("     ");
+  mt_gotoXY (5, 77);
+  fflush (stdout);
+
+  char buf[16];
+  if (fgets (buf, sizeof (buf), stdin) != NULL)
+    {
+      val = atoi (buf);
+      sc_icounterSet(val);
+      mt_setbgcolor (BLACK);
+      mt_setfgcolor (WHITE);
+      mt_gotoXY (5, 77);
       printf ("+%04X", (unsigned short)(val & 0x3FFF));
     }
 

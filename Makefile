@@ -26,6 +26,9 @@ out_OBJS = console/out.o
 
 all: $(addprefix $(LIBDIR)/lib,$(addsuffix .a,$(LIBS)))
 
+%.o: %.c
+	@ gcc $(CFLAGS) -c $< -o $@
+
 $(LIBDIR)/libmySimpleComputer.a: $(mysimplecomputer_OBJS)
 	@ ar rcs $@ $^
 
@@ -48,8 +51,6 @@ run: all $(OBJDIR)/$(target).o
 	@ gcc $(CFLAGS) $(OBJDIR)/$(target).o -L$(LIBDIR) -Wl,--start-group $(addprefix -l,$(LIBS)) -Wl,--end-group -o $(OBJDIR)/$(target)$(EXE)
 	@ ./$(OBJDIR)/$(target)$(EXE)
 
-%.o: %.c
-	@ gcc $(CFLAGS) -c $< -o $@
 
 clean:
 	-@ $(RM) $(OBJDIR)$(SL)$(target).o $(OBJDIR)$(SL)$(target)$(EXE) $(OBJDIR)$(SL)out.o
