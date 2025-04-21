@@ -1,9 +1,11 @@
 #include "myReadKey.h"
 #include "mySimpleComputer.h"
 #include "myTerm.h"
+#include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -65,12 +67,12 @@ sc_memorySet (int address, int value)
       temp |= 0x4000;
       temp += 1;
       memory[address] = temp;
-      inoutAdd (address, '>', temp);
+      inoutAdd (address, '<', temp);
     }
   else
     {
       memory[address] = value;
-      inoutAdd (address, '>', value);
+      inoutAdd (address, '<', value);
     }
   return 0;
 };
@@ -83,16 +85,22 @@ sc_memoryGet (int address, int *value, int inout)
       return -1;
     }
   *value = memory[address];
-  if (inout) inoutAdd (address, '<', *value);
+  if (inout)
+    inoutAdd (address, '>', *value);
   return 0;
 }
 
 void
 sc_editcurrentcell (int address)
 {
-  int val;
+  char buf[32];
+  int val = 0;
   int row = (address / 10) + 2;
   int col = (address % 10) * 6 + 2;
+
+  mt_gotoXY (26, 1);
+  printf ("Ввод . . . ⏳");
+  fflush (stdout);
 
   struct termios oldt, newt;
   tcgetattr (STDIN_FILENO, &oldt);
@@ -107,18 +115,59 @@ sc_editcurrentcell (int address)
   mt_gotoXY (row, col);
   fflush (stdout);
 
-  char buf[16];
   if (fgets (buf, sizeof (buf), stdin) != NULL)
     {
-      val = atoi (buf);
-      sc_memorySet (address, val);
+      int len = strlen (buf);
+      if (len > 0 && buf[len - 1] == '\n')
+        buf[--len] = '\0';
 
-      mt_setbgcolor (BLACK);
-      mt_setfgcolor (WHITE);
-      mt_gotoXY (row, col);
-      printf ("+%04X", (unsigned short)(val & 0x3FFF));
+      int is_negative = 0;
+      int start = 0;
+      if (buf[0] == '-')
+        {
+          is_negative = 1;
+          start = 1;
+        }
+
+      int count = 0;
+      for (int i = start; i + 1 < len && count < 4; i += 2)
+        {
+          char hexpair[3] = { buf[i], buf[i + 1], '\0' };
+          if (!isxdigit (hexpair[0]) || !isxdigit (hexpair[1]))
+            break;
+
+          int hexval = (int)strtol (hexpair, NULL, 16);
+          if (hexval < 0 || hexval > 0x7F)
+            {
+              tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
+              sc_regSet (FLAG_OUTOFRANGE, 1);
+              mt_setdefaultcolor ();
+              fflush (stdout);
+              return;
+            }
+
+          val = (val << 7) | hexval;
+          count++;
+        }
+
+      if (count > 0)
+        {
+          if (is_negative)
+            {
+              invers (&val);
+              val += 1;
+              val *= -1;
+            }
+
+          sc_memorySet (address, val);
+          mt_setbgcolor (BLACK);
+          mt_setfgcolor (WHITE);
+          mt_gotoXY (row, col);
+          printf ("+%04X", (unsigned short)(val & 0x3FFF));
+        }
     }
 
+  sc_regSet (FLAG_INVALIDCMD, 0);
   tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
   mt_setdefaultcolor ();
   fflush (stdout);
@@ -127,7 +176,8 @@ sc_editcurrentcell (int address)
 void
 sc_editaccumulator (void)
 {
-  int val;
+  int val = 0;
+  char buf[32];
 
   struct termios oldt, newt;
   tcgetattr (STDIN_FILENO, &oldt);
@@ -135,22 +185,58 @@ sc_editaccumulator (void)
   newt.c_lflag |= (ICANON | ECHO);
   tcsetattr (STDIN_FILENO, TCSANOW, &newt);
 
-  mt_gotoXY (5, 77);
+  mt_gotoXY (2, 67);
   mt_setbgcolor (WHITE);
   mt_setfgcolor (BLACK);
   printf ("     ");
-  mt_gotoXY (5, 77);
+  mt_gotoXY (2, 67);
   fflush (stdout);
 
-  char buf[16];
   if (fgets (buf, sizeof (buf), stdin) != NULL)
     {
-      val = atoi (buf);
-      sc_accumulatorSet(val);
-      mt_setbgcolor (BLACK);
-      mt_setfgcolor (WHITE);
-      mt_gotoXY (5, 77);
-      printf ("+%04X", (unsigned short)(val & 0x3FFF));
+      int len = strlen (buf);
+      if (len > 0 && buf[len - 1] == '\n')
+        buf[--len] = '\0';
+
+      int is_negative = 0;
+      int start = 0;
+      if (buf[0] == '-')
+        {
+          is_negative = 1;
+          start = 1;
+        }
+
+      int count = 0;
+      for (int i = start; i + 1 < len && count < 4; i += 2)
+        {
+          char hexpair[3] = { buf[i], buf[i + 1], '\0' };
+          if (!isxdigit (hexpair[0]) || !isxdigit (hexpair[1]))
+            break;
+
+          int hexval = (int)strtol (hexpair, NULL, 16);
+          if (hexval < 0 || hexval > 0x7F)
+            {
+              mt_setdefaultcolor ();
+              return;
+            }
+
+          val = (val << 7) | hexval;
+          count++;
+        }
+
+      if (count > 0)
+        {
+          if (is_negative)
+            {
+              val *= -1;
+            }
+
+          sc_accumulatorSet (val);
+          mt_setbgcolor (BLACK);
+          mt_setfgcolor (WHITE);
+          mt_gotoXY (2, 67);
+          printf ("+%04X", (unsigned short)(val & 0x3FFF));
+        }
     }
 
   tcsetattr (STDIN_FILENO, TCSANOW, &oldt);
@@ -159,7 +245,7 @@ sc_editaccumulator (void)
 }
 
 void
-sc_editicounter (void)
+sc_editicounter (int *cell)
 {
   int val;
 
@@ -180,7 +266,8 @@ sc_editicounter (void)
   if (fgets (buf, sizeof (buf), stdin) != NULL)
     {
       val = atoi (buf);
-      sc_icounterSet(val);
+      sc_icounterSet (val);
+      *cell = val;
       mt_setbgcolor (BLACK);
       mt_setfgcolor (WHITE);
       mt_gotoXY (5, 77);

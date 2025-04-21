@@ -81,9 +81,8 @@ void
 printDecodedCommand (int value)
 {
   int sign, command, operand;
-  char sg = (value >> 14) ? '-' : '+';
   sc_commandDecode (value, &sign, &command, &operand);
-  printf ("%c %3d %3d", sg, command, operand);
+  printf ("%c%02X%02X", sign ? '-' : '+', command, operand);
   return;
 }
 
@@ -150,8 +149,11 @@ printInOut (void)
       int value = inoutBuf[i].value;
 
       mt_gotoXY (row + 1 + i, col + 1);
-      printf ("%03d%c %c", address, type, (value >> 14) ? '-' : '+');
-      printHex (value);
+      if (type)
+        {
+          printf ("%03d%c ", address, type);
+          printDecodedCommand (value);
+        }
     }
 }
 
@@ -210,6 +212,7 @@ printMem (int edit)
           printf (" ");
         }
     }
+  isvalidcommands ();
   printEditCell (edit);
   bc_printeditbig (edit);
 }
@@ -260,19 +263,15 @@ printHex (int value)
 void
 printEditCell (int address)
 {
-  int value = 0, sign = 0, temp;
+  int value = 0, sign, temp, cmd, op;
   sc_memoryGet (address, &value, 0);
+  sc_commandDecode (value, &sign, &cmd, &op);
   temp = value;
-  if (temp >> 14)
+  temp &= 0x3fff;
+  if (sign)
     {
-      sign = 1;
-      temp &= 0x3fff;
       temp -= 1;
       invers (&temp);
-    }
-  else
-    {
-      temp &= 0x3fff;
     }
   bc_box (16, 1, 3, 61, WHITE, BLACK, "Редактируемая ячейка (формат)", WHITE,
           YELLOW);

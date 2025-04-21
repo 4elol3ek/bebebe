@@ -33,9 +33,9 @@ int sc_commandEncode (int sign, int command, int operand, int *value);
 int sc_commandDecode (int value, int *sign, int *command, int *operand);
 void inoutAdd (int address, char type, int value);
 void sc_editaccumulator (void);
-void sc_editicounter (void);
+void sc_editicounter (int *cell);
 void invers (int *value);
-
+int isvalidcommands ();
 
 typedef struct
 {

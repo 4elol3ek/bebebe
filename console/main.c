@@ -5,15 +5,18 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
+extern InOutEntry inoutBuf[INOUT_SIZE];
 
 #define MEM_SIZE 128
 
 int
-printInterface (int cell)
+printInterface (void)
 {
+  int cell;
+  sc_icounterGet (&cell);
   printMem (cell);
-  sc_icounterSet(cell);
   printAccumulator ();
   printFlags ();
   printCounters ();
@@ -29,13 +32,18 @@ int
 main (void)
 {
   srand ((unsigned int)time (NULL));
-  
-  sc_regInit();
+
+  int cell = 0;
+  int exitFlag = 0;
+  keys key;
+
+  sc_regInit ();
   sc_memoryInit ();
   sc_accumulatorInit ();
   sc_icounterInit ();
-  sc_regSet(FLAG_IGNORE,1);
+  sc_regSet (FLAG_IGNORE, 1);
 
+  mt_clrscr ();
   printHints ();
 
   sc_memorySet (0, -16383);
@@ -57,15 +65,9 @@ main (void)
       return -1;
     }
 
-  // mt_clrscr();
-
-  int cell = 0;
-  int exitFlag = 0;
-  keys key;
-
   while (!exitFlag)
     {
-      printInterface (cell);
+      printInterface ();
 
       if (rk_readkey (&key) != 0)
         continue;
@@ -77,23 +79,24 @@ main (void)
             cell += 110;
           else
             cell = (cell - 10 + (MEM_SIZE + 2)) % (MEM_SIZE + 2);
+          sc_icounterSet (cell);
           break;
         case KEY_DOWN:
           if (cell == 118 || cell == 119)
-            cell-=110;
+            cell -= 110;
           else
             cell = (cell + 10) % (MEM_SIZE + 2);
+          sc_icounterSet (cell);
           break;
         case KEY_LEFT:
           cell = (cell - 1 + MEM_SIZE) % MEM_SIZE;
+          sc_icounterSet (cell);
           break;
         case KEY_RIGHT:
           cell = (cell + 1) % MEM_SIZE;
+          sc_icounterSet (cell);
           break;
         case KEY_ENTER:
-          mt_gotoXY (26, 1);
-          printf ("Ввод . . . ⏳");
-          fflush (stdout);
           sc_editcurrentcell (cell);
           mt_clrscr ();
           printHints ();
@@ -102,7 +105,7 @@ main (void)
           sc_editaccumulator ();
           break;
         case KEY_F6:
-          sc_editicounter ();
+          sc_editicounter (&cell);
           break;
         case KEY_L:
           mt_gotoXY (26, 1);
@@ -117,10 +120,13 @@ main (void)
           fflush (stdout);
           break;
         case KEY_I:
+          memset (inoutBuf, 0, sizeof (InOutEntry) * 5);
           sc_memoryInit ();
-          sc_accumulatorSet (0);
-          sc_icounterSet (0);
-          sc_regInit();
+          sc_accumulatorInit ();
+          sc_regInit ();
+          sc_regSet (FLAG_IGNORE, 1);
+          mt_clrscr ();
+          printHints ();
           break;
         case KEY_ESC:
           exitFlag = 1;
@@ -131,7 +137,6 @@ main (void)
     }
 
   rk_mytermrestore ();
-  // mt_clrscr();
   printf ("Выход из программы.\n");
 
   return 0;
