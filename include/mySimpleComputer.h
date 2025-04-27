@@ -37,6 +37,11 @@ void sc_editicounter (int *cell);
 void invers (int *value);
 int isvalidcommands ();
 
+/*Функции процессора*/
+void initInterrupts (void);
+void startExecutionMode (void);
+void stopExecutionMode (void);
+
 typedef struct
 {
   int address;

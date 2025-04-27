@@ -14,7 +14,9 @@ typedef enum
   KEY_F6,
   KEY_L,
   KEY_S,
-  KEY_I
+  KEY_I,
+  KEY_R,
+  KEY_T
 } keys;
 
 int rk_mytermsave (void);

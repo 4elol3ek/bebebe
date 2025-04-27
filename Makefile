@@ -8,7 +8,7 @@ else
 	SL = /
 endif
 
-CFLAGS = -Wall -Wextra -std=c11 -O3 -Iinclude
+CFLAGS = -Wall -Wextra -O3 -Iinclude
 target = main
 LIBDIR = include
 OBJDIR = console
@@ -16,7 +16,7 @@ OBJDIR = console
 # .a и их .o файлы
 LIBS = mySimpleComputer myTerm myBigChars myReadKey out
 
-mysimplecomputer_OBJS = mySimpleComputer/sc_commandEncoder.o mySimpleComputer/sc_memory.o mySimpleComputer/sc_regist.o mySimpleComputer/sc_variables.o
+mysimplecomputer_OBJS = mySimpleComputer/sc_commandEncoder.o mySimpleComputer/sc_memory.o mySimpleComputer/sc_regist.o mySimpleComputer/sc_variables.o mySimpleComputer/CPU.o
 myterm_OBJS = myTerm/myTerm.o
 mybigchars_OBJS = myBigChars/myBigChars.o
 myreadkey_OBJS = myReadKey/myReadKey.o

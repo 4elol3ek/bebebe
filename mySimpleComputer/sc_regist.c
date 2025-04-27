@@ -58,7 +58,7 @@ sc_accumulatorSet (int value)
       accumulator = temp;
       return 0;
     }
-  else if (value > 32736)
+  else if (value > 32737)
     {
       return -1;
     }

@@ -55,7 +55,7 @@ sc_memorySet (int address, int value)
       sc_regSet (FLAG_OUTOFRANGE, 1);
       return -1;
     }
-  else if (address < 0 || address >= 128)
+  else if (address < 0 || address > 127)
     {
       return -2;
     }

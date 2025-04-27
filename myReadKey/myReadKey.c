@@ -68,6 +68,10 @@ rk_readkey (keys *key)
         *key = KEY_S;
       else if (buf[0] == 'i' || buf[0] == 'I')
         *key = KEY_I;
+      else if (buf[0] == 'r' || buf[0] == 'R')
+        *key = KEY_R;
+      else if (buf[0] == 't' || buf[0] == 'T')
+        *key = KEY_T;
       else
         *key = KEY_UNKNOWN;
     }

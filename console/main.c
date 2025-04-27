@@ -7,7 +7,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+
 extern InOutEntry inoutBuf[INOUT_SIZE];
+extern void initInterrupts (void);
+extern void startExecutionMode (void);
+extern void stopExecutionMode (void);
+extern void nextTick (void);
 
 #define MEM_SIZE 128
 
@@ -56,14 +62,17 @@ main (void)
 
   if (rk_mytermsave () != 0)
     {
-      printf ("Ошибка сохранения настроек терминала.\n");
+      fprintf (stderr, "rk_mytermsave failed\n");
       return -1;
     }
+
   if (rk_mytermregime (0, 0, 1, 0) != 0)
     {
-      printf ("Ошибка установки неканонического режима.\n");
+      fprintf (stderr, "rk_mytermregime failed\n");
       return -1;
     }
+
+  initInterrupts ();
 
   while (!exitFlag)
     {
@@ -74,53 +83,68 @@ main (void)
 
       switch (key)
         {
+        case KEY_R:
+          startExecutionMode ();
+          break;
+
+        case KEY_T:
+          stopExecutionMode ();
+          sc_regSet (FLAG_IGNORE, 0);
+          nextTick ();
+          sc_regSet (FLAG_IGNORE, 1);
+          break;
+
         case KEY_UP:
-          if (cell == 8 || cell == 9)
-            cell += 110;
-          else
-            cell = (cell - 10 + (MEM_SIZE + 2)) % (MEM_SIZE + 2);
-          sc_icounterSet (cell);
-          break;
         case KEY_DOWN:
-          if (cell == 118 || cell == 119)
-            cell -= 110;
-          else
-            cell = (cell + 10) % (MEM_SIZE + 2);
-          sc_icounterSet (cell);
-          break;
         case KEY_LEFT:
-          cell = (cell - 1 + MEM_SIZE) % MEM_SIZE;
-          sc_icounterSet (cell);
-          break;
         case KEY_RIGHT:
-          cell = (cell + 1) % MEM_SIZE;
+          stopExecutionMode ();
+          sc_icounterGet (&cell);
+          if (key == KEY_UP)
+            cell = (cell - 10 + (130)) % (130);
+          else if (key == KEY_DOWN)
+            cell = (cell + 10) % (130);
+          else if (key == KEY_LEFT)
+            cell = (cell + 127) % 128;
+          else if (key == KEY_RIGHT)
+            cell = (cell + 1) % 128;
           sc_icounterSet (cell);
           break;
+
         case KEY_ENTER:
+          stopExecutionMode ();
           sc_editcurrentcell (cell);
           mt_clrscr ();
           printHints ();
           break;
+
         case KEY_F5:
+          stopExecutionMode ();
           sc_editaccumulator ();
           break;
+
         case KEY_F6:
+          stopExecutionMode ();
           sc_editicounter (&cell);
           break;
+
         case KEY_L:
+          stopExecutionMode ();
           mt_gotoXY (26, 1);
-          rk_mytermsave ();
           printf ("Сохранение памяти...\n");
           fflush (stdout);
           break;
+
         case KEY_S:
+          stopExecutionMode ();
           mt_gotoXY (26, 1);
-          rk_mytermrestore ();
           printf ("Загрузка памяти...\n");
           fflush (stdout);
           break;
+
         case KEY_I:
-          memset (inoutBuf, 0, sizeof (InOutEntry) * 5);
+          stopExecutionMode ();
+          memset (inoutBuf, 0, sizeof (inoutBuf));
           sc_memoryInit ();
           sc_accumulatorInit ();
           sc_regInit ();
@@ -128,16 +152,20 @@ main (void)
           mt_clrscr ();
           printHints ();
           break;
+
         case KEY_ESC:
+          stopExecutionMode ();
           exitFlag = 1;
           break;
+
         default:
           break;
         }
     }
 
   rk_mytermrestore ();
+  mt_setdefaultcolor ();
+  mt_clrscr ();
   printf ("Выход из программы.\n");
-
   return 0;
 }
