@@ -12,6 +12,7 @@
 #define ROTR15(x, n) ((((x) >> (n)) | ((x) << (15 - (n)))) & 0x7FFF)
 
 int timeout = 250000;
+static int temp;
 
 extern int printInterface (void);
 static int (*inout_com[128]) (int operand) = { NULL };
@@ -151,6 +152,7 @@ com_MUL (int operand)
 static inline int
 op_JUMP (int operand)
 {
+  temp = operand - 1;
   return sc_icounterSet (operand);
 }
 
@@ -181,7 +183,7 @@ op_HALT (int operand)
   return sc_regSet (FLAG_IGNORE, 1);
 }
 
-// TRANSFER FUNC START
+// TRANSFER FUNC END
 
 // USER FUNC START
 
@@ -191,7 +193,7 @@ op_NOT (int operand)
   int a;
   sc_accumulatorGet (&a);
   invers (&a);
-  sc_memorySet (operand, 0);
+  sc_memorySet (operand, a);
   return 0;
 }
 
@@ -204,7 +206,29 @@ op_AND (int operand)
   return sc_accumulatorSet ((a & b) & 0x7FFF);
 }
 
-// USER FUNC START
+static inline int
+op_RCR (int operand)
+{
+  int b;
+  sc_memoryGet (operand, &b, 0);
+  return sc_accumulatorSet (ROTR15 (b, 1));
+}
+
+static inline int
+op_NEG (int operand)
+{
+  int b;
+  sc_memoryGet (operand, &b, 0);
+  if ((b >> 14))
+    {
+      invers (&b);
+      b += 1;
+      b |= 0x4000;
+    }
+  return sc_accumulatorSet (b & 0x7FFF);
+}
+
+// USER FUNC END
 
 static void
 init_commands (void)
@@ -228,20 +252,8 @@ init_commands (void)
 
   user_com[0x33] = op_NOT;
   user_com[0x34] = op_AND;
-}
-
-void
-nextTick (void)
-{
-  int ic;
-  sc_icounterGet (&ic);
-
-  int t;
-  sc_regGet (FLAG_IGNORE, &t);
-  if (!t)
-    {
-      CU ();
-    }
+  user_com[0x3F] = op_RCR;
+  user_com[0x40] = op_NEG;
 }
 
 int
@@ -331,7 +343,7 @@ userfunc (int command, int operand)
 void
 CU (void)
 {
-  int val, sign, cmd, op, temp;
+  int val, sign, cmd, op;
   sc_icounterGet (&val);
   temp = val;
   sc_memoryGet (val, &val, 1);
@@ -345,31 +357,42 @@ CU (void)
     inout (cmd, op);
   else if (cmd == 0x15)
     trans (cmd, op);
-  else if (cmd > 0x15 && cmd < 0x21)
+  else if (cmd > 0x15 && cmd <= 0x21)
     ALU (cmd, op);
-  else if (cmd > 0x21 && cmd < 0x2B)
+  else if (cmd > 0x21 && cmd <= 0x2B)
     trans (cmd, op);
-  else if (cmd > 0x2B && cmd < 0x4C)
+  else if (cmd > 0x2B && cmd <= 0x40)
     userfunc (cmd, op);
+}
 
-  int ignore = 0;
-  sc_regGet (FLAG_IGNORE, &ignore);
-  if (!ignore)
+void
+nextTick (void)
+{
+  int ic;
+  sc_icounterGet (&ic);
+
+  int t;
+  sc_regGet (FLAG_IGNORE, &t);
+  if (!t)
     {
-      sc_icounterSet ((temp + 1) % 128);
+      CU ();
+      sc_icounterSet ((ic + 1) % 128);
     }
 }
 
 void
 IRC (int signum)
 {
-  int t;
+  int t, val;
+  sc_icounterGet (&val);
+  temp = val;
   sc_regGet (FLAG_IGNORE, &t);
   if (signum == SIGALRM)
     {
       if (!t)
         {
           CU ();
+          sc_icounterSet ((temp + 1) % 128);
         }
     }
   else if (signum == SIGUSR1)
