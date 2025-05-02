@@ -50,7 +50,7 @@ sc_memorySave (const char *filename)
 int
 sc_memorySet (int address, int value)
 {
-  if (value < -16383 || value > 16383)
+  if (value < -16384 || value > 16384)
     {
       sc_regSet (FLAG_OUTOFRANGE, 1);
       return -1;
@@ -152,14 +152,22 @@ sc_editcurrentcell (int address)
 
       if (count > 0)
         {
-          if (is_negative)
+          if (is_negative && val)
             {
               invers (&val);
               val += 1;
               val *= -1;
+              sc_memorySet (address, val);
             }
-
-          sc_memorySet (address, val);
+          else if (is_negative && !val)
+            {
+              val |= 0x4000;
+              memory[address] = val;
+            }
+          else
+            {
+              sc_memorySet (address, val);
+            }
           mt_setbgcolor (BLACK);
           mt_setfgcolor (WHITE);
           mt_gotoXY (row, col);
@@ -226,12 +234,20 @@ sc_editaccumulator (void)
 
       if (count > 0)
         {
-          if (is_negative)
+          if (is_negative && val)
             {
               val *= -1;
+              sc_accumulatorSet (val);
             }
-
-          sc_accumulatorSet (val);
+          else if (is_negative && !val)
+            {
+              val |= 0x4000;
+              sc_accumulatorSet (val);
+            }
+          else
+            {
+              sc_accumulatorSet (val);
+            }
           mt_setbgcolor (BLACK);
           mt_setfgcolor (WHITE);
           mt_gotoXY (2, 67);

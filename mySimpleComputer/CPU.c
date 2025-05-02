@@ -11,14 +11,12 @@
 #define ROTL15(x, n) ((((x) << (n)) | ((x) >> (15 - (n)))) & 0x7FFF)
 #define ROTR15(x, n) ((((x) >> (n)) | ((x) << (15 - (n)))) & 0x7FFF)
 
-int timeout = 250000;
+int timeout = 500000;
 static int temp;
 
+extern int memory[128];
 extern int printInterface (void);
-static int (*inout_com[128]) (int operand) = { NULL };
-static int (*ALU_com[128]) (int operand) = { NULL };
-static int (*trans_com[128]) (int operand) = { NULL };
-static int (*user_com[128]) (int operand) = { NULL };
+static int (*commands[128]) (int operand) = { NULL };
 static int initialized = 0;
 
 // IN_OUT FUNC START
@@ -55,7 +53,7 @@ op_WRITE (int operand)
           "                         ");
   mt_gotoXY (27, 1);
   sc_memoryGet (operand, &a, 0);
-  printf ("Ячейка №%d hex: %04X", operand + 1, a);
+  printf ("Ячейка №%d hex: %04X, dec:%d", operand + 1, a, a);
   return sc_icounterSet (operand);
 }
 
@@ -89,7 +87,7 @@ com_ADD (int operand)
   sc_memoryGet (operand, &b, 1);
 
   res = a + b;
-  if (res < -0x3FFF || res > 0x7FFF)
+  if (res < -0x7FFF || res > 0x7FFF)
     {
       sc_regSet (FLAG_OVERFLOW, 1);
       res &= 0x7fff;
@@ -119,9 +117,13 @@ com_DIV (int operand)
   int a, b, res;
   sc_accumulatorGet (&a);
   sc_memoryGet (operand, &b, 1);
-
+  if (!b)
+    {
+      sc_regSet (FLAG_DIVZERO, 1);
+      return -1;
+    }
   res = a / b;
-  if (res < -0x3FFF || res > 0x3FFF)
+  if (res < -0x7FFF || res > 0x7FFF)
     {
       sc_regSet (FLAG_OVERFLOW, 1);
       return -1;
@@ -137,7 +139,7 @@ com_MUL (int operand)
   sc_memoryGet (operand, &b, 1);
 
   res = a * b;
-  if (res < -0x3FFF || res > 0x3FFF)
+  if (res < -0x7FFF || res > 0x7FFF)
     {
       sc_regSet (FLAG_OVERFLOW, 1);
       return -1;
@@ -192,8 +194,17 @@ op_NOT (int operand)
 {
   int a;
   sc_accumulatorGet (&a);
-  invers (&a);
-  sc_memorySet (operand, a);
+  if (a >> 14)
+    {
+      invers (&a);
+      a &= 0x3fff;
+    }
+  else
+    {
+      invers (&a);
+      a |= 0x4000;
+    }
+  memory[operand] = a;
   return 0;
 }
 
@@ -219,13 +230,7 @@ op_NEG (int operand)
 {
   int b;
   sc_memoryGet (operand, &b, 0);
-  if ((b >> 14))
-    {
-      invers (&b);
-      b += 1;
-      b |= 0x4000;
-    }
-  return sc_accumulatorSet (b & 0x7FFF);
+  return sc_accumulatorSet (b);
 }
 
 // USER FUNC END
@@ -233,31 +238,31 @@ op_NEG (int operand)
 static void
 init_commands (void)
 {
-  inout_com[0x00] = op_NOP;
-  inout_com[0x01] = op_CPUINFO;
-  inout_com[0x0A] = op_READ;
-  inout_com[0x0B] = op_WRITE;
-  inout_com[0x14] = op_LOAD;
-  inout_com[0x15] = op_STORE;
+  commands[0x00] = op_NOP;
+  commands[0x01] = op_CPUINFO;
+  commands[0x0A] = op_READ;
+  commands[0x0B] = op_WRITE;
+  commands[0x14] = op_LOAD;
+  commands[0x15] = op_STORE;
 
-  ALU_com[0x1E] = com_ADD;
-  ALU_com[0x1F] = com_SUB;
-  ALU_com[0x20] = com_DIV;
-  ALU_com[0x21] = com_MUL;
+  commands[0x1E] = com_ADD;
+  commands[0x1F] = com_SUB;
+  commands[0x20] = com_DIV;
+  commands[0x21] = com_MUL;
 
-  trans_com[0x28] = op_JUMP;
-  trans_com[0x29] = op_JNEG;
-  trans_com[0x2A] = op_JZ;
-  trans_com[0x2B] = op_HALT;
+  commands[0x28] = op_JUMP;
+  commands[0x29] = op_JNEG;
+  commands[0x2A] = op_JZ;
+  commands[0x2B] = op_HALT;
 
-  user_com[0x33] = op_NOT;
-  user_com[0x34] = op_AND;
-  user_com[0x3F] = op_RCR;
-  user_com[0x40] = op_NEG;
+  commands[0x33] = op_NOT;
+  commands[0x34] = op_AND;
+  commands[0x3F] = op_RCR;
+  commands[0x40] = op_NEG;
 }
 
 int
-inout (int command, int operand)
+execute (int command, int operand)
 {
   if (!initialized)
     {
@@ -265,72 +270,9 @@ inout (int command, int operand)
       initialized = 1;
     }
 
-  if (command >= 0 && command < 128 && inout_com[command])
+  if (command >= 0 && command < 128 && commands[command])
     {
-      return inout_com[command](operand);
-    }
-  else
-    {
-      sc_regSet (FLAG_INVALIDCMD, 1);
-      return -1;
-    }
-  return 0;
-}
-
-int
-ALU (int command, int operand)
-{
-  if (!initialized)
-    {
-      init_commands ();
-      initialized = 1;
-    }
-
-  if (command >= 0 && command < 128 && ALU_com[command])
-    {
-      return ALU_com[command](operand);
-    }
-  else
-    {
-      sc_regSet (FLAG_INVALIDCMD, 1);
-      return -1;
-    }
-  return 0;
-}
-
-int
-trans (int command, int operand)
-{
-  if (!initialized)
-    {
-      init_commands ();
-      initialized = 1;
-    }
-
-  if (command >= 0 && command < 128 && trans_com[command])
-    {
-      return trans_com[command](operand);
-    }
-  else
-    {
-      sc_regSet (FLAG_INVALIDCMD, 1);
-      return -1;
-    }
-  return 0;
-}
-
-int
-userfunc (int command, int operand)
-{
-  if (!initialized)
-    {
-      init_commands ();
-      initialized = 1;
-    }
-
-  if (command >= 0 && command < 128 && user_com[command])
-    {
-      return user_com[command](operand);
+      return commands[command](operand);
     }
   else
     {
@@ -353,30 +295,18 @@ CU (void)
   if (cmd < 0 || cmd > 0x7F)
     return;
 
-  if (cmd < 0x15)
-    inout (cmd, op);
-  else if (cmd == 0x15)
-    trans (cmd, op);
-  else if (cmd > 0x15 && cmd <= 0x21)
-    ALU (cmd, op);
-  else if (cmd > 0x21 && cmd <= 0x2B)
-    trans (cmd, op);
-  else if (cmd > 0x2B && cmd <= 0x40)
-    userfunc (cmd, op);
+  execute (cmd, op);
 }
 
 void
 nextTick (void)
 {
-  int ic;
-  sc_icounterGet (&ic);
-
   int t;
   sc_regGet (FLAG_IGNORE, &t);
   if (!t)
     {
       CU ();
-      sc_icounterSet ((ic + 1) % 128);
+      sc_icounterSet ((temp + 1) % 128);
     }
 }
 

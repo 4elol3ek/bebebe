@@ -52,13 +52,10 @@ main (void)
   mt_clrscr ();
   printHints ();
 
-  sc_memorySet (0, -16383);
-  sc_memorySet (1, 16383);
-  sc_memorySet (2, rand () % 32768 - 16383);
-  sc_memorySet (3, rand () % 32768 - 16383);
-  sc_memorySet (10, 16383);
-  sc_memorySet (20, -16383);
-  sc_memorySet (23, 13158);
+  for (int i = 0; i < 128; i++)
+    {
+      sc_memorySet (i, i << 7 | i);
+    }
 
   if (rk_mytermsave () != 0)
     {
@@ -113,6 +110,7 @@ main (void)
 
         case KEY_ENTER:
           stopExecutionMode ();
+          sc_icounterGet (&cell);
           sc_editcurrentcell (cell);
           mt_clrscr ();
           printHints ();

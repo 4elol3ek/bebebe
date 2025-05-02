@@ -54,6 +54,7 @@ run: all $(OBJDIR)/$(target).o
 
 clean:
 	-@ $(RM) $(OBJDIR)$(SL)$(target).o $(OBJDIR)$(SL)$(target)$(EXE) $(OBJDIR)$(SL)out.o
+	-@ $(RM) mySimpleComputer/CPU.o
 	-@ $(RM) $(addprefix $(LIBDIR)$(SL)lib,$(addsuffix .a,$(LIBS)))
 	@ $(foreach dir, $(LIBS), \
 		$(if $(wildcard $(dir)$(SL)Makefile), \
