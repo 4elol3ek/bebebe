@@ -163,6 +163,7 @@ sc_editcurrentcell (int address)
             {
               val |= 0x4000;
               memory[address] = val;
+              inoutAdd(address,'<', val);
             }
           else
             {

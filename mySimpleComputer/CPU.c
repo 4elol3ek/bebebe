@@ -33,7 +33,7 @@ op_CPUINFO (int operand)
 {
   (void)operand;
   mt_gotoXY (27, 1);
-  printf ("ИА-331 Шкляев Денис Викторович\nИА-331 Иргит Сенгин Хурешович");
+  printf ("Тилепов Данияр Илимбекович, ИС-342");
   return 0;
 }
 
@@ -182,6 +182,7 @@ static inline int
 op_HALT (int operand)
 {
   (void)operand;
+  temp-=1;
   return sc_regSet (FLAG_IGNORE, 1);
 }
 
@@ -190,47 +191,27 @@ op_HALT (int operand)
 // USER FUNC START
 
 static inline int
-op_NOT (int operand)
+op_ADDC (int operand)
 {
-  int a;
-  sc_accumulatorGet (&a);
-  if (a >> 14)
-    {
-      invers (&a);
-      a &= 0x3fff;
-    }
-  else
-    {
-      invers (&a);
-      a |= 0x4000;
-    }
-  memory[operand] = a;
-  return 0;
+  int value = 0;
+  int m1 = 0, m2 = 0;
+  sc_accumulatorGet(&value);
+  sc_memoryGet(value & 0x7F, &m1, 0);
+  sc_memoryGet(m1 & 0x7F, &m2, 0);
+  sc_memoryGet(operand, &m1, 0);
+  m1 = m1 + m2;
+  return sc_accumulatorSet(m1 & 0x7fff);
 }
 
 static inline int
-op_AND (int operand)
+op_MOVCR (int operand)
 {
-  int a, b;
-  sc_accumulatorGet (&a);
-  sc_memoryGet (operand, &b, 1);
-  return sc_accumulatorSet ((a & b) & 0x7FFF);
-}
-
-static inline int
-op_RCR (int operand)
-{
-  int b;
-  sc_memoryGet (operand, &b, 0);
-  return sc_accumulatorSet (ROTR15 (b, 1));
-}
-
-static inline int
-op_NEG (int operand)
-{
-  int b;
-  sc_memoryGet (operand, &b, 0);
-  return sc_accumulatorSet (b);
+  int value = 0;
+  int m1 = 0, m2 = 0;
+  sc_accumulatorGet(&value);
+  sc_memoryGet(value & 0x7F, &m1, 0);
+  sc_memoryGet(m1 & 0x7F, &m2, 0);
+  return sc_memorySet(operand, m2);
 }
 
 // USER FUNC END
@@ -255,10 +236,8 @@ init_commands (void)
   commands[0x2A] = op_JZ;
   commands[0x2B] = op_HALT;
 
-  commands[0x33] = op_NOT;
-  commands[0x34] = op_AND;
-  commands[0x3F] = op_RCR;
-  commands[0x40] = op_NEG;
+  // commands[0x4A] = op_MOVCR;
+  // commands[0x4b] = op_ADDC;
 }
 
 int

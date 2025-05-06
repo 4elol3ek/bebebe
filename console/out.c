@@ -267,7 +267,6 @@ printEditCell (int address)
   sc_memoryGet (address, &value, 0);
   sc_commandDecode (value, &sign, &cmd, &op);
   temp = value;
-  temp &= 0x3fff;
   if (sign)
     {
       temp -= 1;
