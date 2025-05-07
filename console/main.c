@@ -52,10 +52,28 @@ main (void)
   mt_clrscr ();
   printHints ();
 
-  for (int i = 0; i < 128; i++)
-    {
-      sc_memorySet (i, i << 7 | i);
-    }
+  sc_memorySet(0, 0x1405);
+  sc_memorySet(1, 0x9);
+  sc_memorySet(2, 0x1);
+  sc_memorySet(3, 0x1);
+  sc_memorySet(4, 0x1);
+  sc_memorySet(5, 0x0a02);
+  sc_memorySet(6, 0x1083);
+  sc_memorySet(7, 0x0A82);
+  sc_memorySet(8, 0x0A03);
+  sc_memorySet(9, 0x0F04);
+  sc_memorySet(10, 0x0A83);
+  sc_memorySet(11, 0x0A03);
+  sc_memorySet(12, 0x0F81);
+  sc_memorySet(13, 0x1485);
+  sc_memorySet(14, 0x1581);
+
+  // sc_accumulatorSet(14);
+
+  // for (int i = 0; i < 128; i++)
+  //   {
+  //     sc_memorySet (i, i << 7 | i);
+  //   }
 
   if (rk_mytermsave () != 0)
     {
@@ -130,6 +148,7 @@ main (void)
           stopExecutionMode ();
           mt_gotoXY (26, 1);
           printf ("Сохранение памяти...\n");
+          sc_memorySave("../bin/file.txt");
           fflush (stdout);
           break;
 

@@ -53,7 +53,7 @@ op_WRITE (int operand)
           "                         ");
   mt_gotoXY (27, 1);
   sc_memoryGet (operand, &a, 0);
-  printf ("Ячейка №%d hex: %04X, dec:%d", operand + 1, a, a);
+  printf ("Ячейка[%03d] hex: %04X, dec:%d", operand, a, a);
   return sc_icounterSet (operand);
 }
 
@@ -139,7 +139,7 @@ com_MUL (int operand)
   sc_memoryGet (operand, &b, 1);
 
   res = a * b;
-  if (res < -0x7FFF || res > 0x7FFF)
+  if (res < -0x8000 || res > 0x7FFF)
     {
       sc_regSet (FLAG_OVERFLOW, 1);
       return -1;
@@ -163,8 +163,10 @@ op_JNEG (int operand)
 {
   int a;
   sc_accumulatorGet (&a);
-  if (a >> 14)
+  if (a >> 14){
+    temp = operand - 1;
     return sc_icounterSet (operand);
+  }
   return 0;
 }
 
@@ -193,24 +195,24 @@ op_HALT (int operand)
 static inline int
 op_ADDC (int operand)
 {
-  int value = 0;
-  int m1 = 0, m2 = 0;
+  int value;
+  int m1, m2;
   sc_accumulatorGet(&value);
-  sc_memoryGet(value & 0x7F, &m1, 0);
-  sc_memoryGet(m1 & 0x7F, &m2, 0);
+  sc_memoryGet(value, &m1, 0);
+  sc_memoryGet(m1, &m2, 0);
   sc_memoryGet(operand, &m1, 0);
   m1 = m1 + m2;
-  return sc_accumulatorSet(m1 & 0x7fff);
+  return sc_accumulatorSet(m1);
 }
 
 static inline int
 op_MOVCR (int operand)
 {
-  int value = 0;
-  int m1 = 0, m2 = 0;
+  int value;
+  int m1, m2;
   sc_accumulatorGet(&value);
-  sc_memoryGet(value & 0x7F, &m1, 0);
-  sc_memoryGet(m1 & 0x7F, &m2, 0);
+  sc_memoryGet(value, &m1, 0);
+  sc_memoryGet(m1, &m2, 0);
   return sc_memorySet(operand, m2);
 }
 
@@ -236,8 +238,8 @@ init_commands (void)
   commands[0x2A] = op_JZ;
   commands[0x2B] = op_HALT;
 
-  // commands[0x4A] = op_MOVCR;
-  // commands[0x4b] = op_ADDC;
+  commands[0x4A] = op_MOVCR;
+  commands[0x4b] = op_ADDC;
 }
 
 int

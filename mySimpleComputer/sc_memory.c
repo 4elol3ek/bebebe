@@ -62,9 +62,9 @@ sc_memorySet (int address, int value)
   else if (value < 0)
     {
       int temp = value * -1;
-      temp = temp & 0x3FFF;
+      temp = temp & 0x3FFF; // 00111111 11111111
       invers (&temp);
-      temp |= 0x4000;
+      temp |= 0x4000; // 01000000
       temp += 1;
       memory[address] = temp;
       inoutAdd (address, '<', temp);
@@ -72,6 +72,8 @@ sc_memorySet (int address, int value)
   else
     {
       memory[address] = value;
+      // printf("%x", memory[address]);
+      // fflush(stdout);
       inoutAdd (address, '<', value);
     }
   return 0;
