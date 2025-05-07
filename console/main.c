@@ -145,18 +145,33 @@ main (void)
           break;
 
         case KEY_L:
-          stopExecutionMode ();
-          mt_gotoXY (26, 1);
-          printf ("Сохранение памяти...\n");
-          sc_memorySave("../bin/file.txt");
-          fflush (stdout);
+          stopExecutionMode();
+          mt_gotoXY(26, 1);
+          char loadname[52];
+          printf("Загрузка памяти.\n");
+          printf("Введите название файла: \n");
+          rk_mytermrestore();
+          scanf("%s", loadname);
+          rk_mytermregime(0, 0, 1, 0);
+          sc_memoryLoad(loadname);
+          fflush(stdout);
+          mt_clrscr();
+          printHints();
           break;
 
         case KEY_S:
           stopExecutionMode ();
           mt_gotoXY (26, 1);
-          printf ("Загрузка памяти...\n");
-          fflush (stdout);
+          char name[52];
+          printf ("Сохранение памяти.\n");
+          printf ("Введите название файла: \n");
+          rk_mytermrestore();
+          scanf("%s", name);
+          rk_mytermregime(0,0,1,0);
+          sc_memorySave(name);
+          fflush(stdout);
+          mt_clrscr();
+          printHints();
           break;
 
         case KEY_I:

@@ -24,7 +24,9 @@ sc_memoryInit (void)
 int
 sc_memoryLoad (const char *filename)
 {
-  FILE *f = fopen (filename, "rb");
+  char path[52];
+  snprintf(path, 52, "bin/%s", filename);
+  FILE *f = fopen (path, "rb");
   if (!f)
     {
       return -1;
@@ -37,7 +39,9 @@ sc_memoryLoad (const char *filename)
 int
 sc_memorySave (const char *filename)
 {
-  FILE *f = fopen (filename, "wb");
+  char path[52];
+  snprintf(path, 52, "bin/%s", filename);
+  FILE *f = fopen (path, "wb");
   if (!f)
     {
       return -1;
