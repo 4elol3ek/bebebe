@@ -14,7 +14,7 @@ extern int memory[128];
 int
 sc_memoryInit (void)
 {
-  for (int i = 0; i < 128; i++)
+  for (int i = 0; i < MEM_SIZE; i++)
     {
       memory[i] = 0;
     }

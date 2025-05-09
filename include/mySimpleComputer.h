@@ -9,6 +9,11 @@
 
 #define INOUT_SIZE 5
 
+#define CACHE_LINES 5
+#define LINE_SIZE 10
+
+#define MEM_SIZE 128
+
 /* Функции памяти */
 int sc_memoryInit (void);
 int sc_memorySet (int address, int value);
@@ -41,6 +46,21 @@ int isvalidcommands ();
 void initInterrupts (void);
 void startExecutionMode (void);
 void stopExecutionMode (void);
+
+/*Кэш*/
+
+void cacheInit(void);
+int cacheRead(int address, int *value);
+int cacheWrite(int address, int value);
+unsigned long cacheGetCycles(void);
+void updateAges(int idx);
+typedef struct {
+  int valid;                 /* Флаг валидности */
+  int dirty;                 /* Флаг модификации */
+  int tag;                   /* Номер блока */
+  int data[LINE_SIZE]; /* Данные */
+  unsigned int age;          /* "Возраст" для LRU: больше — реже использовалась */
+} CacheLine;
 
 typedef struct
 {

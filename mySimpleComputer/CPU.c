@@ -8,8 +8,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define ROTL15(x, n) ((((x) << (n)) | ((x) >> (15 - (n)))) & 0x7FFF)
-#define ROTR15(x, n) ((((x) >> (n)) | ((x) << (15 - (n)))) & 0x7FFF)
 
 int timeout = 500000;
 static int temp;
@@ -18,6 +16,7 @@ extern int memory[128];
 extern int printInterface (void);
 static int (*commands[128]) (int operand) = { NULL };
 static int initialized = 0;
+
 
 // IN_OUT FUNC START
 
@@ -49,7 +48,7 @@ op_WRITE (int operand)
 {
   int a;
   mt_gotoXY (27, 1);
-  printf ("                                               \n                  "
+  printf ("                                               \n"
           "                         ");
   mt_gotoXY (27, 1);
   sc_memoryGet (operand, &a, 0);
