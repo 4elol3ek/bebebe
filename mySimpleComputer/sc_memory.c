@@ -25,7 +25,7 @@ int
 sc_memoryLoad (const char *filename)
 {
   char path[52];
-  snprintf(path, 52, "bin/%s", filename);
+  snprintf (path, 52, "bin/%s", filename);
   FILE *f = fopen (path, "rb");
   if (!f)
     {
@@ -40,7 +40,7 @@ int
 sc_memorySave (const char *filename)
 {
   char path[52];
-  snprintf(path, 52, "bin/%s", filename);
+  snprintf (path, 52, "bin/%s", filename);
   FILE *f = fopen (path, "wb");
   if (!f)
     {
@@ -51,39 +51,48 @@ sc_memorySave (const char *filename)
   return (written == 128) ? 0 : -1;
 };
 
-int sc_memorySet(int address, int value) {
+int
+sc_memorySet (int address, int value)
+{
 
-  if (value < -16384 || value > 16384) {
-      sc_regSet(FLAG_OUTOFRANGE, 1);
+  if (value < -16384 || value > 16384)
+    {
+      sc_regSet (FLAG_OUTOFRANGE, 1);
       return -1;
-  }
+    }
 
-  if (address < 0 || address >= MEM_SIZE) {
-      sc_regSet(FLAG_OUTOFRANGE, 1);
+  if (address < 0 || address >= MEM_SIZE)
+    {
+      sc_regSet (FLAG_OUTOFRANGE, 1);
       return -2;
-  }
+    }
   int encoded = value;
 
-  if (value < 0) {
+  if (value < 0)
+    {
       encoded = -value & 0x3FFF;
-      invers(&encoded);
+      invers (&encoded);
       encoded |= 0x4000;
       encoded += 1;
-  }
+    }
 
-  if (sc_cacheWrite(address, encoded) != 0)
-      return -1;
-  inoutAdd(address, '<', encoded);
+  if (sc_cacheWrite (address, encoded) != 0)
+    return -1;
+
   return 0;
 }
 
-int sc_memoryPeek(int address, int *value){
-  if (address < 0 || address >= MEM_SIZE) return -1;
+int
+sc_memoryPeek (int address, int *value)
+{
+  if (address < 0 || address >= MEM_SIZE)
+    return -1;
   *value = memory[address];
   return 0;
 }
 
-int sc_memorySetE (int address, int value)
+int
+sc_memorySetE (int address, int value)
 {
   if (value < -16384 || value > 16384)
     {
@@ -102,40 +111,41 @@ int sc_memorySetE (int address, int value)
       temp |= 0x4000;
       temp += 1;
       memory[address] = temp;
-      inoutAdd (address, '<', temp);
+      // inoutAdd (address, '<', temp);
     }
   else
     {
       memory[address] = value;
-      inoutAdd (address, '<', value);
+      // inoutAdd (address, '<', value);
     }
   return 0;
 };
 
-int sc_memoryGet(int address, int *value, int inout) {
-  if (value == NULL || address < 0 || address >= MEM_SIZE) {
-      sc_regSet(FLAG_OUTOFRANGE, 1);
+int
+sc_memoryGet (int address, int *value)
+{
+  if (value == NULL || address < 0 || address >= MEM_SIZE)
+    {
+      sc_regSet (FLAG_OUTOFRANGE, 1);
       return -1;
-  }
+    }
 
-  if (sc_cacheRead(address, value) != 0)
-      return -1;
-  if (inout)
-      inoutAdd(address, '>', *value);
+  if (sc_cacheRead (address, value) != 0)
+    return -1;
   return 0;
 }
 
 void
-sc_editcurrentcell (int address)
+sc_editcurrentcell (int address, int interactive)
 {
   char buf[32];
   int val = 0;
   int row = (address / 10) + 2;
   int col = (address % 10) * 6 + 2;
 
-  mt_gotoXY (26, 1);
-  printf ("Ввод . . . ⏳");
-  fflush (stdout);
+  // mt_gotoXY (26, 1);
+  // // printf ("Ввод . . . ⏳");
+  // fflush (stdout);
 
   struct termios oldt, newt;
   tcgetattr (STDIN_FILENO, &oldt);
@@ -152,6 +162,13 @@ sc_editcurrentcell (int address)
 
   if (fgets (buf, sizeof (buf), stdin) != NULL)
     {
+      // mt_gotoXY(28, 1);
+
+      // printf("%s", buf);
+      // mt_gotoXY(row, col);
+      // mt_setdefaultcolor();
+      // fflush(stdout);
+
       int len = strlen (buf);
       if (len > 0 && buf[len - 1] == '\n')
         buf[--len] = '\0';
@@ -163,7 +180,6 @@ sc_editcurrentcell (int address)
           is_negative = 1;
           start = 1;
         }
-
       int count = 0;
       for (int i = start; i + 1 < len && count < 4; i += 2)
         {
@@ -197,13 +213,15 @@ sc_editcurrentcell (int address)
           else if (is_negative && !val)
             {
               val |= 0x4000;
-              memory[address] = val;
-              inoutAdd(address,'<', val);
+              sc_memorySetE (address, val);
+              // memory[address] = val;
             }
           else
             {
               sc_memorySetE (address, val);
             }
+          if (interactive)
+            inoutAdd (address, '<', val);
           mt_setbgcolor (BLACK);
           mt_setfgcolor (WHITE);
           mt_gotoXY (row, col);

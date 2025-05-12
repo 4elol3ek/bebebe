@@ -8,7 +8,7 @@ else
 	SL = /
 endif
 
-CFLAGS = -Wall -Wextra -O3 -Iinclude
+CFLAGS = -Wall -Wextra -O0 -Iinclude
 target = main
 LIBDIR = include
 OBJDIR = console
@@ -49,6 +49,7 @@ $(OBJDIR)/$(target).o: $(OBJDIR)/$(target).c
 
 run: all $(OBJDIR)/$(target).o
 	@ gcc $(CFLAGS) $(OBJDIR)/$(target).o -L$(LIBDIR) -Wl,--start-group $(addprefix -l,$(LIBS)) -Wl,--end-group -o $(OBJDIR)/$(target)$(EXE)
+	# @ objdump -d -M amd $(OBJDIR)/$(target)$(EXE) > $(OBJDIR)/$(target)$(EXE).asm
 	@ ./$(OBJDIR)/$(target)$(EXE)
 
 

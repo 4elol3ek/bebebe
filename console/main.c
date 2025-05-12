@@ -6,16 +6,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
 #include <time.h>
 #include <unistd.h>
 
 CacheLine cache[CACHE_LINES];
 extern InOutEntry inoutBuf[INOUT_SIZE];
+extern inoutCount;
 extern void initInterrupts (void);
 extern void startExecutionMode (void);
 extern void stopExecutionMode (void);
 extern void nextTick (void);
-
 
 int
 printInterface (void)
@@ -42,17 +43,16 @@ main (void)
   int cell = 0;
   int exitFlag = 0;
   keys key;
-  sc_cacheInit();
+  sc_cacheInit ();
   sc_regInit ();
   sc_memoryInit ();
   sc_accumulatorInit ();
   sc_icounterInit ();
   sc_regSet (FLAG_IGNORE, 1);
 
-
   mt_clrscr ();
   printHints ();
-  
+
   // sc_accumulatorSet(14);
 
   // for (int i = 0; i < 128; i++)
@@ -74,7 +74,7 @@ main (void)
 
   initInterrupts ();
   while (!exitFlag)
-  {
+    {
       printInterface ();
 
       if (rk_readkey (&key) != 0)
@@ -113,7 +113,7 @@ main (void)
         case KEY_ENTER:
           stopExecutionMode ();
           sc_icounterGet (&cell);
-          sc_editcurrentcell (cell);
+          sc_editcurrentcell (cell, 0);
           mt_clrscr ();
           printHints ();
           break;
@@ -129,19 +129,26 @@ main (void)
           break;
 
         case KEY_L:
-          stopExecutionMode();
-          mt_gotoXY(26, 1);
+          stopExecutionMode ();
+          mt_gotoXY (26, 1);
           char loadname[52];
-          printf("Загрузка памяти.\n");
-          printf("Введите название файла: \n");
-          rk_mytermrestore();
-          scanf("%s", loadname);
-          rk_mytermregime(0, 0, 1, 0);
-          sc_memoryLoad(loadname);
-          fflush(stdout);
-          mt_clrscr();
-          printMem(0);
-          printHints();
+          printf ("Загрузка памяти.\n");
+          printf ("Введите название файла: \n");
+          rk_mytermrestore ();
+
+          tcflush (STDIN_FILENO, TCIFLUSH);
+
+          if (fgets (loadname, sizeof loadname, stdin))
+            {
+              size_t len = strlen (loadname);
+              if (len > 0 && loadname[len - 1] == '\n')
+                loadname[len - 1] = '\0';
+              sc_memoryLoad (loadname);
+            }
+          rk_mytermregime (0, 0, 1, 0);
+          mt_clrscr ();
+          printMem (0);
+          printHints ();
           break;
 
         case KEY_S:
@@ -150,20 +157,28 @@ main (void)
           char name[52];
           printf ("Сохранение памяти.\n");
           printf ("Введите название файла: \n");
-          rk_mytermrestore();
-          scanf("%s", name);
-          rk_mytermregime(0,0,1,0);
-          sc_memorySave(name);
-          fflush(stdout);
-          mt_clrscr();
-          printHints();
+          rk_mytermrestore ();
+
+          tcflush (STDIN_FILENO, TCIFLUSH);
+
+          if (fgets (name, sizeof name, stdin))
+            {
+              size_t len = strlen (name);
+              if (len > 0 && name[len - 1] == '\n')
+                name[len - 1] = '\0';
+              sc_memorySave (name);
+            }
+          rk_mytermregime (0, 0, 1, 0);
+          mt_clrscr ();
+          printHints ();
           break;
 
         case KEY_I:
           stopExecutionMode ();
           memset (inoutBuf, 0, sizeof (inoutBuf));
+          inoutCount = 0;
           sc_memoryInit ();
-          sc_cacheInit();
+          sc_cacheInit ();
           sc_accumulatorInit ();
           sc_regInit ();
           sc_regSet (FLAG_IGNORE, 1);

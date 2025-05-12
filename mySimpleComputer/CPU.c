@@ -8,16 +8,14 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-
-int timeout = 500000;
 static int temp;
+volatile int tick_delay = 0;
 
 extern int memory[128];
 extern CacheLine cache[CACHE_LINES];
 extern int printInterface (void);
 static int (*commands[128]) (int operand) = { NULL };
 static int initialized = 0;
-
 
 // IN_OUT FUNC START
 
@@ -40,7 +38,18 @@ op_CPUINFO (int operand)
 static inline int
 op_READ (int operand)
 {
-  sc_editcurrentcell (operand);
+  mt_gotoXY (24, 72);
+  mt_setbgcolor (WHITE);
+  mt_setfgcolor (BLACK);
+  printf ("    ");
+  mt_gotoXY (24, 72);
+  fflush (stdout);
+  sc_editcurrentcell (operand, 1);
+  mt_gotoXY (24, 72);
+  mt_setdefaultcolor ();
+  printf ("    ");
+  fflush (stdout);
+  tick_delay = 2;
   return 0;
 }
 
@@ -52,7 +61,7 @@ op_WRITE (int operand)
   printf ("                                               \n"
           "                         ");
   mt_gotoXY (27, 1);
-  sc_memoryGet (operand, &a, 0);
+  sc_memoryGet (operand, &a);
   printf ("Ячейка[%03d] hex: %04X, dec:%d", operand, a, a);
   return sc_icounterSet (operand);
 }
@@ -61,7 +70,7 @@ static inline int
 op_LOAD (int operand)
 {
   int value = 0;
-  if (sc_memoryGet (operand, &value, 1) != 0)
+  if (sc_memoryGet (operand, &value) != 0)
     return -1;
   return sc_accumulatorSet (value);
 }
@@ -84,7 +93,7 @@ com_ADD (int operand)
 {
   int a, b, res;
   sc_accumulatorGet (&a);
-  sc_memoryGet (operand, &b, 1);
+  sc_memoryGet (operand, &b);
 
   res = a + b;
   if (res < -0x7FFF || res > 0x7FFF)
@@ -100,7 +109,7 @@ com_SUB (int operand)
 {
   int a, b, res;
   sc_accumulatorGet (&a);
-  sc_memoryGet (operand, &b, 1);
+  sc_memoryGet (operand, &b);
 
   res = a - b;
   if (res < -0x7FFF || res > 0x7FFF)
@@ -116,7 +125,7 @@ com_DIV (int operand)
 {
   int a, b, res;
   sc_accumulatorGet (&a);
-  sc_memoryGet (operand, &b, 1);
+  sc_memoryGet (operand, &b);
   if (!b)
     {
       sc_regSet (FLAG_DIVZERO, 1);
@@ -136,7 +145,7 @@ com_MUL (int operand)
 {
   int a, b, res;
   sc_accumulatorGet (&a);
-  sc_memoryGet (operand, &b, 1);
+  sc_memoryGet (operand, &b);
 
   res = a * b;
   if (res < -0x8000 || res > 0x7FFF)
@@ -163,10 +172,11 @@ op_JNEG (int operand)
 {
   int a;
   sc_accumulatorGet (&a);
-  if (a >> 14){
-    temp = operand - 1;
-    return sc_icounterSet (operand);
-  }
+  if (a >> 14)
+    {
+      temp = operand - 1;
+      return sc_icounterSet (operand);
+    }
   return 0;
 }
 
@@ -184,8 +194,11 @@ static inline int
 op_HALT (int operand)
 {
   (void)operand;
-  temp-=1;
-  return sc_regSet (FLAG_IGNORE, 1);
+  temp -= 1;
+  // return sc_regSet (FLAG_IGNORE, 1);
+  sc_cacheFlush (-1);
+  sc_cacheInit ();
+  stopExecutionMode ();
 }
 
 // TRANSFER FUNC END
@@ -197,12 +210,12 @@ op_ADDC (int operand)
 {
   int value;
   int m1, m2;
-  sc_accumulatorGet(&value);
-  sc_memoryGet(value, &m1, 0);
-  sc_memoryGet(m1, &m2, 0);
-  sc_memoryGet(operand, &m1, 0);
+  sc_accumulatorGet (&value);
+  sc_memoryGet (value, &m1);
+  sc_memoryGet (m1, &m2);
+  sc_memoryGet (operand, &m1);
   m1 = m1 + m2;
-  return sc_accumulatorSet(m1);
+  return sc_accumulatorSet (m1);
 }
 
 static inline int
@@ -210,10 +223,10 @@ op_MOVCR (int operand)
 {
   int value;
   int m1, m2;
-  sc_accumulatorGet(&value);
-  sc_memoryGet(value, &m1, 0);
-  sc_memoryGet(m1, &m2, 0);
-  return sc_memorySet(operand, m2);
+  sc_accumulatorGet (&value);
+  sc_memoryGet (value, &m1);
+  sc_memoryGet (m1, &m2);
+  return sc_memorySet (operand, m2);
 }
 
 // USER FUNC END
@@ -301,6 +314,11 @@ IRC (int signum)
   sc_regGet (FLAG_IGNORE, &t);
   if (signum == SIGALRM)
     {
+      if (tick_delay > 0)
+        {
+          tick_delay--;
+          return;
+        }
       if (!t)
         {
           CU ();
@@ -352,7 +370,7 @@ void
 startExecutionMode (void)
 {
   sc_regSet (FLAG_IGNORE, 0);
-  struct itimerval iv = { { 0, timeout }, { 0, timeout } };
+  struct itimerval iv = { { 0, TIMEOUT }, { 0, TIMEOUT } };
   setitimer (ITIMER_REAL, &iv, NULL);
 }
 

@@ -33,37 +33,44 @@ printCache (void)
 
   int row = 19, col = 1;
   bc_box (row, col, 7, 65, WHITE, BLACK, "Кеш процессора", RED, BLACK);
-  // mt_gotoXY(20, 2);
+  mt_gotoXY (20, 2);
 
-  // for (int i = 0; i < CACHE_LINES; i++){
+  for (int i = 0; i < CACHE_LINES; i++)
+    {
 
-  //   if (cache[i].valid){
+      if (cache[i].valid)
+        {
 
-  //     int value, com, op, sign;
-  //     int size = (cache[i].tag == 12) ? 8 : 10;
-  //     printf ("%02d: ", cache[i].tag);
+          int value, com, op, sign;
+          int size = (cache[i].tag == 12) ? 8 : 10;
+          printf ("%02d: ", cache[i].tag);
 
-  //     for (int j = 0; j < size; j++){
-  //       value = cache[i].data[j];
-  //       sc_commandDecode(value, &sign, &com, &op);
-  //       printf ("%c%02X%02X", sign ? '-' : '+', com, op);
-  //       if (j < 9)
-  //        printf("%c", ' ');
-  //       fflush(stdout);
-  //     }
+          for (int j = 0; j < size; j++)
+            {
+              value = cache[i].data[j];
+              sc_commandDecode (value, &sign, &com, &op);
+              printf ("%c%02X%02X", sign ? '-' : '+', com, op);
+              if (j < 9)
+                printf ("%c", ' ');
+              fflush (stdout);
+            }
 
-  //     if (size == 8) printf("            ");
-  //   } else {
-  //     printf ("%02d: ", 0);
-  //     for (int j = 0; j < 10; j++){
-  //       printf ("%c%02X%02X", '+', 0, 0);
-  //       if (j < 9)
-  //       printf("%c", ' ');
-  //       fflush(stdout);
-  //     }
-  //   }
-  //   mt_gotoXY(row + i + 2, col + 1);
-  // }
+          if (size == 8)
+            printf ("            ");
+        }
+      else
+        {
+          printf ("%02d: ", 0);
+          for (int j = 0; j < 10; j++)
+            {
+              printf ("%c%02X%02X", '+', 0, 0);
+              if (j < 9)
+                printf ("%c", ' ');
+              fflush (stdout);
+            }
+        }
+      mt_gotoXY (row + i + 2, col + 1);
+    }
   return 0;
 }
 
