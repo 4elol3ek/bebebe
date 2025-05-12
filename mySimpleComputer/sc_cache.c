@@ -10,33 +10,29 @@
 
 extern int memory[128];
 
-static CacheLine cache[CACHE_LINES];
-static unsigned long cycle_count = 0;
+extern CacheLine cache[CACHE_LINES];
+unsigned long cycle_count = 0;
 
-void cacheInit(void) {
+void sc_cacheInit(void) {
     cycle_count = 0;
-    for (int i = 0; i < CACHE_LINES; ++i) {
-        cache[i].valid = 0;
-        cache[i].dirty = 0;
-        cache[i].tag   = -1;
-        cache[i].age   = 0;
-    }
+    // mt_gotoXY(27,1);
+    // printf("%p in init\n", (void*)cache);
+    // fflush(stdout);
+    memset(cache, 0, sizeof(cache));
 }
 
 unsigned long cacheGetCycles(void) {
     return cycle_count;
 }
 
-/* Увеличить возраст всех загруженных строк, обнулить для idx */
-static void updateAges(int idx) {
+void updateAges(int idx) {
     for (int i = 0; i < CACHE_LINES; ++i)
         if (cache[i].valid)
             cache[i].age++;
     cache[idx].age = 0;
 }
 
-/* Найти индекс свободной или LRU-строки */
-static int selectLine(void) {
+int selectLine(void) {
     for (int i = 0; i < CACHE_LINES; ++i)
         if (!cache[i].valid)
             return i;
@@ -51,27 +47,26 @@ static int selectLine(void) {
     return idx;
 }
 
-/* Размер блока: для последнего блока может быть меньше LINE_SIZE */
-static int blockSize(int block) {
-    int start = block * LINE_SIZE;
-    int remaining = MEM_SIZE - start;
-    return (remaining < LINE_SIZE ? remaining : LINE_SIZE);
+int lineSize(int tag) {
+    return (tag == 12 ? 8 : 10);
 }
 
-int cacheRead(int address, int *value) {
+int sc_cacheRead(int address, int *value) {
     if (address < 0 || address >= MEM_SIZE) {
         sc_regSet(FLAG_OUTOFRANGE, 1);
         return -1;
     }
-    int block = address / LINE_SIZE;
+    int tag = address / LINE_SIZE;
     int offset = address % LINE_SIZE;
-    /* поиск по тегу */
+
     for (int i = 0; i < CACHE_LINES; ++i) {
-        if (cache[i].valid && cache[i].tag == block) {
+        if (cache[i].valid && cache[i].tag == tag) {
             cycle_count += 2;
             updateAges(i);
             *value = cache[i].data[offset];
-            return 0;
+            printf("cache-hit\n");
+            fflush(stdout);
+            return 0; // cache-hit
         }
     }
     /* промах */
@@ -79,34 +74,34 @@ int cacheRead(int address, int *value) {
     int idx = selectLine();
     /* write-back */
     if (cache[idx].valid && cache[idx].dirty) {
-        int old_block = cache[idx].tag;
-        int size = blockSize(old_block);
-        int base_old = old_block * LINE_SIZE;
+        int old_tag = cache[idx].tag;
+        int size = lineSize(old_tag);
+        int base_old = old_tag * LINE_SIZE;
         for (int j = 0; j < size; ++j)
             memory[base_old + j] = cache[idx].data[j];
     }
-    /* загрузка новой строки */
-    int size = blockSize(block);
-    int base = block * LINE_SIZE;
+
+    int size = lineSize(tag);
+    int base = tag * LINE_SIZE;
     for (int j = 0; j < size; ++j)
         cache[idx].data[j] = memory[base + j];
     cache[idx].valid = 1;
     cache[idx].dirty = 0;
-    cache[idx].tag   = block;
+    cache[idx].tag = tag;
     updateAges(idx);
     *value = cache[idx].data[offset];
     return 0;
 }
 
-int cacheWrite(int address, int value) {
+int sc_cacheWrite(int address, int value) {
     if (address < 0 || address >= MEM_SIZE) {
         sc_regSet(FLAG_OUTOFRANGE, 1);
         return -1;
     }
-    int block = address / LINE_SIZE;
+    int tag = address / LINE_SIZE;
     int offset = address % LINE_SIZE;
     for (int i = 0; i < CACHE_LINES; ++i) {
-        if (cache[i].valid && cache[i].tag == block) {
+        if (cache[i].valid && cache[i].tag == tag) {
             cache[i].data[offset] = value;
             cache[i].dirty = 1;
             cycle_count += 2;
@@ -118,18 +113,18 @@ int cacheWrite(int address, int value) {
     cycle_count += 10;
     int idx = selectLine();
     if (cache[idx].valid && cache[idx].dirty) {
-        int old_block = cache[idx].tag;
-        int size_old = blockSize(old_block);
-        int base_old = old_block * LINE_SIZE;
+        int old_tag = cache[idx].tag;
+        int size_old = lineSize(old_tag);
+        int base_old = old_tag * LINE_SIZE;
         for (int j = 0; j < size_old; ++j)
             memory[base_old + j] = cache[idx].data[j];
     }
-    int size = blockSize(block);
-    int base = block * LINE_SIZE;
+    int size = lineSize(tag);
+    int base = tag * LINE_SIZE;
     for (int j = 0; j < size; ++j)
         cache[idx].data[j] = memory[base + j];
     cache[idx].valid = 1;
-    cache[idx].tag   = block;
+    cache[idx].tag   = tag;
     /* запись */
     cache[idx].data[offset] = value;
     cache[idx].dirty = 1;

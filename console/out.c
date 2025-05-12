@@ -4,6 +4,7 @@
 #include "myTerm.h"
 #include <stdio.h>
 
+extern CacheLine cache[CACHE_LINES];
 extern int reg_flags;
 InOutEntry inoutBuf[INOUT_SIZE];
 int inoutCount = 0;
@@ -29,8 +30,40 @@ printHints (void)
 int
 printCache (void)
 {
+
   int row = 19, col = 1;
   bc_box (row, col, 7, 65, WHITE, BLACK, "Кеш процессора", RED, BLACK);
+  // mt_gotoXY(20, 2);
+
+  // for (int i = 0; i < CACHE_LINES; i++){
+
+  //   if (cache[i].valid){
+
+  //     int value, com, op, sign;
+  //     int size = (cache[i].tag == 12) ? 8 : 10;
+  //     printf ("%02d: ", cache[i].tag);
+
+  //     for (int j = 0; j < size; j++){
+  //       value = cache[i].data[j];
+  //       sc_commandDecode(value, &sign, &com, &op);
+  //       printf ("%c%02X%02X", sign ? '-' : '+', com, op);
+  //       if (j < 9)
+  //        printf("%c", ' ');
+  //       fflush(stdout);
+  //     }
+
+  //     if (size == 8) printf("            ");
+  //   } else {
+  //     printf ("%02d: ", 0);
+  //     for (int j = 0; j < 10; j++){
+  //       printf ("%c%02X%02X", '+', 0, 0);
+  //       if (j < 9)
+  //       printf("%c", ' ');
+  //       fflush(stdout);
+  //     }
+  //   }
+  //   mt_gotoXY(row + i + 2, col + 1);
+  // }
   return 0;
 }
 
@@ -105,7 +138,7 @@ printCMD (void)
     }
 
   int value;
-  if (sc_memoryGet (ic, &value, 0) != 0)
+  if (sc_memoryPeek (ic, &value) != 0)
     {
       printf ("!+FF : FF");
       return;
@@ -172,7 +205,7 @@ printCell (int address, enum colors fg, enum colors bg)
         mt_setbgcolor (bg);
     }
 
-  if (sc_memoryGet (address, &value, 0) == -1)
+  if (sc_memoryPeek (address, &value) == -1)
     {
       printf ("ERROR");
       return;
@@ -264,7 +297,7 @@ void
 printEditCell (int address)
 {
   int value = 0, sign, temp, cmd, op;
-  sc_memoryGet (address, &value, 0);
+  sc_memoryPeek (address, &value);
   sc_commandDecode (value, &sign, &cmd, &op);
   temp = value;
   if (sign)

@@ -13,6 +13,7 @@ int timeout = 500000;
 static int temp;
 
 extern int memory[128];
+extern CacheLine cache[CACHE_LINES];
 extern int printInterface (void);
 static int (*commands[128]) (int operand) = { NULL };
 static int initialized = 0;
@@ -268,7 +269,8 @@ CU (void)
   int val, sign, cmd, op;
   sc_icounterGet (&val);
   temp = val;
-  sc_memoryGet (val, &val, 1);
+  // sc_memoryGet (val, &val, 1);
+  sc_memoryPeek (val, &val);
   if (sc_commandDecode (val, &sign, &cmd, &op) != 0)
     return;
 

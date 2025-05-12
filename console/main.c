@@ -9,7 +9,7 @@
 #include <time.h>
 #include <unistd.h>
 
-extern CacheLine cache[CACHE_LINES];
+CacheLine cache[CACHE_LINES];
 extern InOutEntry inoutBuf[INOUT_SIZE];
 extern void initInterrupts (void);
 extern void startExecutionMode (void);
@@ -42,16 +42,17 @@ main (void)
   int cell = 0;
   int exitFlag = 0;
   keys key;
-
+  sc_cacheInit();
   sc_regInit ();
   sc_memoryInit ();
   sc_accumulatorInit ();
   sc_icounterInit ();
   sc_regSet (FLAG_IGNORE, 1);
 
+
   mt_clrscr ();
   printHints ();
-
+  
   // sc_accumulatorSet(14);
 
   // for (int i = 0; i < 128; i++)
@@ -72,9 +73,8 @@ main (void)
     }
 
   initInterrupts ();
-
   while (!exitFlag)
-    {
+  {
       printInterface ();
 
       if (rk_readkey (&key) != 0)
@@ -140,6 +140,7 @@ main (void)
           sc_memoryLoad(loadname);
           fflush(stdout);
           mt_clrscr();
+          printMem(0);
           printHints();
           break;
 
@@ -162,6 +163,7 @@ main (void)
           stopExecutionMode ();
           memset (inoutBuf, 0, sizeof (inoutBuf));
           sc_memoryInit ();
+          sc_cacheInit();
           sc_accumulatorInit ();
           sc_regInit ();
           sc_regSet (FLAG_IGNORE, 1);

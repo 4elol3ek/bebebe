@@ -227,7 +227,7 @@ int
 bc_printeditbig (int address)
 {
   int value = 0, com, op, sign;
-  if (sc_memoryGet (address, &value, 0) != 0)
+  if (sc_memoryPeek (address, &value) != 0)
     return -1;
   sc_commandDecode (value, &sign, &com, &op);
 

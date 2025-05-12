@@ -51,8 +51,39 @@ sc_memorySave (const char *filename)
   return (written == 128) ? 0 : -1;
 };
 
-int
-sc_memorySet (int address, int value)
+int sc_memorySet(int address, int value) {
+
+  if (value < -16384 || value > 16384) {
+      sc_regSet(FLAG_OUTOFRANGE, 1);
+      return -1;
+  }
+
+  if (address < 0 || address >= MEM_SIZE) {
+      sc_regSet(FLAG_OUTOFRANGE, 1);
+      return -2;
+  }
+  int encoded = value;
+
+  if (value < 0) {
+      encoded = -value & 0x3FFF;
+      invers(&encoded);
+      encoded |= 0x4000;
+      encoded += 1;
+  }
+
+  if (sc_cacheWrite(address, encoded) != 0)
+      return -1;
+  inoutAdd(address, '<', encoded);
+  return 0;
+}
+
+int sc_memoryPeek(int address, int *value){
+  if (address < 0 || address >= MEM_SIZE) return -1;
+  *value = memory[address];
+  return 0;
+}
+
+int sc_memorySetE (int address, int value)
 {
   if (value < -16384 || value > 16384)
     {
@@ -66,9 +97,9 @@ sc_memorySet (int address, int value)
   else if (value < 0)
     {
       int temp = value * -1;
-      temp = temp & 0x3FFF; // 00111111 11111111
+      temp = temp & 0x3FFF;
       invers (&temp);
-      temp |= 0x4000; // 01000000
+      temp |= 0x4000;
       temp += 1;
       memory[address] = temp;
       inoutAdd (address, '<', temp);
@@ -76,23 +107,21 @@ sc_memorySet (int address, int value)
   else
     {
       memory[address] = value;
-      // printf("%x", memory[address]);
-      // fflush(stdout);
       inoutAdd (address, '<', value);
     }
   return 0;
 };
 
-int
-sc_memoryGet (int address, int *value, int inout)
-{
-  if (value == NULL || address < 0 || address >= 128)
-    {
+int sc_memoryGet(int address, int *value, int inout) {
+  if (value == NULL || address < 0 || address >= MEM_SIZE) {
+      sc_regSet(FLAG_OUTOFRANGE, 1);
       return -1;
-    }
-  *value = memory[address];
+  }
+
+  if (sc_cacheRead(address, value) != 0)
+      return -1;
   if (inout)
-    inoutAdd (address, '>', *value);
+      inoutAdd(address, '>', *value);
   return 0;
 }
 
@@ -163,7 +192,7 @@ sc_editcurrentcell (int address)
               invers (&val);
               val += 1;
               val *= -1;
-              sc_memorySet (address, val);
+              sc_memorySetE (address, val);
             }
           else if (is_negative && !val)
             {
@@ -173,7 +202,7 @@ sc_editcurrentcell (int address)
             }
           else
             {
-              sc_memorySet (address, val);
+              sc_memorySetE (address, val);
             }
           mt_setbgcolor (BLACK);
           mt_setfgcolor (WHITE);

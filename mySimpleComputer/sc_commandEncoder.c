@@ -99,7 +99,7 @@ isvalidcommands (void)
   for (int i = 0; i < 128; i++)
     {
       int raw, sign, cmd, op;
-      if (sc_memoryGet (i, &raw, 0) != 0)
+      if (sc_memoryPeek (i, &raw) != 0)
         continue;
       if (sc_commandDecode (raw, &sign, &cmd, &op) != 0)
         continue;

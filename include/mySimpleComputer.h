@@ -17,7 +17,9 @@
 /* Функции памяти */
 int sc_memoryInit (void);
 int sc_memorySet (int address, int value);
+int sc_memorySetE (int address, int value);
 int sc_memoryGet (int address, int *value, int inout);
+int sc_memoryPeek (int address, int *value);
 int sc_memorySave (const char *filename);
 int sc_memoryLoad (const char *filename);
 void sc_editcurrentcell (int address);
@@ -49,17 +51,19 @@ void stopExecutionMode (void);
 
 /*Кэш*/
 
-void cacheInit(void);
-int cacheRead(int address, int *value);
-int cacheWrite(int address, int value);
-unsigned long cacheGetCycles(void);
+void sc_cacheInit(void);
+int sc_cacheRead(int address, int *value);
+int sc_cacheWrite(int address, int value);
+unsigned long sc_cacheGetCycles(void);
 void updateAges(int idx);
+int selectLine(void);
+
 typedef struct {
-  int valid;                 /* Флаг валидности */
-  int dirty;                 /* Флаг модификации */
-  int tag;                   /* Номер блока */
-  int data[LINE_SIZE]; /* Данные */
-  unsigned int age;          /* "Возраст" для LRU: больше — реже использовалась */
+  int valid;
+  int dirty;
+  int tag;
+  int data[LINE_SIZE];
+  unsigned int age;
 } CacheLine;
 
 typedef struct
