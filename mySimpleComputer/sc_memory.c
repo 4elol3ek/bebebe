@@ -208,20 +208,22 @@ sc_editcurrentcell (int address, int interactive)
               invers (&val);
               val += 1;
               val *= -1;
-              sc_memorySetE (address, val);
+              sc_memorySet (address, val);
             }
           else if (is_negative && !val)
             {
               val |= 0x4000;
-              sc_memorySetE (address, val);
-              // memory[address] = val;
+              sc_memorySet (address, val);
             }
           else
             {
-              sc_memorySetE (address, val);
+              sc_memorySet (address, val);
             }
           if (interactive)
-            inoutAdd (address, '<', val);
+            {
+              inoutAdd (address, '<', val);
+              sc_memorySetE (address, val);
+            }
           mt_setbgcolor (BLACK);
           mt_setfgcolor (WHITE);
           mt_gotoXY (row, col);

@@ -79,14 +79,6 @@ sc_cacheRead (int address, int *value)
     }
   /* cache-miss */
   int idx = selectLine ();
-  /* write-back */
-  // if (cache[idx].valid && cache[idx].dirty) {
-  //     int old_tag = cache[idx].tag;
-  //     int size = lineSize(old_tag);
-  //     int base_old = old_tag * LINE_SIZE;
-  //     for (int j = 0; j < size; ++j)
-  //         memory[base_old + j] = cache[idx].data[j];
-  // }
   sc_cacheFlush (idx);
   int size = lineSize (tag);
   int base = tag * LINE_SIZE;
@@ -124,13 +116,6 @@ sc_cacheWrite (int address, int value)
     }
   /* промах: загрузка */
   int idx = selectLine ();
-  // if (cache[idx].valid && cache[idx].dirty) {
-  //     int old_tag = cache[idx].tag;
-  //     int size_old = lineSize(old_tag);
-  //     int base_old = old_tag * LINE_SIZE;
-  //     for (int j = 0; j < size_old; ++j)
-  //         memory[base_old + j] = cache[idx].data[j];
-  // }
   sc_cacheFlush (idx);
   int size = lineSize (tag);
   int base = tag * LINE_SIZE;

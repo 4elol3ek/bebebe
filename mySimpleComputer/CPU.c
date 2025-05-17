@@ -38,17 +38,7 @@ op_CPUINFO (int operand)
 static inline int
 op_READ (int operand)
 {
-  mt_gotoXY (24, 72);
-  mt_setbgcolor (WHITE);
-  mt_setfgcolor (BLACK);
-  printf ("    ");
-  mt_gotoXY (24, 72);
-  fflush (stdout);
   sc_editcurrentcell (operand, 1);
-  mt_gotoXY (24, 72);
-  mt_setdefaultcolor ();
-  printf ("    ");
-  fflush (stdout);
   tick_delay = 2;
   return 0;
 }
@@ -57,12 +47,8 @@ static inline int
 op_WRITE (int operand)
 {
   int a;
-  mt_gotoXY (27, 1);
-  printf ("                                               \n"
-          "                         ");
-  mt_gotoXY (27, 1);
   sc_memoryGet (operand, &a);
-  printf ("Ячейка[%03d] hex: %04X, dec:%d", operand, a, a);
+  inoutAdd (operand, '>', a);
   return sc_icounterSet (operand);
 }
 
@@ -282,8 +268,7 @@ CU (void)
   int val, sign, cmd, op;
   sc_icounterGet (&val);
   temp = val;
-  // sc_memoryGet (val, &val, 1);
-  sc_memoryPeek (val, &val);
+  sc_memoryGet (val, &val);
   if (sc_commandDecode (val, &sign, &cmd, &op) != 0)
     return;
 
