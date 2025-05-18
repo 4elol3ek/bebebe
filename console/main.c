@@ -100,9 +100,11 @@ main (void)
           stopExecutionMode ();
           sc_icounterGet (&cell);
           if (key == KEY_UP)
-            cell = (cell - 10 + (130)) % (130);
+            cell = (cell - 10 + (130)) % (130) - ((cell == 9) * 10)
+                   - ((cell == 8) * 10);
           else if (key == KEY_DOWN)
-            cell = (cell + 10) % (130);
+            cell = ((cell + 10) < 128) * (cell + 10)
+                   + ((cell + 10) >= 128) * (cell % 10);
           else if (key == KEY_LEFT)
             cell = (cell + 127) % 128;
           else if (key == KEY_RIGHT)

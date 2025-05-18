@@ -9,6 +9,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+extern CacheLine cache[CACHE_LINES];
 extern int memory[128];
 
 int
@@ -208,20 +209,31 @@ sc_editcurrentcell (int address, int interactive)
               invers (&val);
               val += 1;
               val *= -1;
-              sc_memorySet (address, val);
+              // sc_memorySet (address, val);
+              sc_memorySetE (address, val);
             }
           else if (is_negative && !val)
             {
               val |= 0x4000;
-              sc_memorySet (address, val);
+              // sc_memorySet (address, val);
+              sc_memorySetE (address, val);
             }
           else
             {
-              sc_memorySet (address, val);
+              // sc_memorySet (address, val);
+              sc_memorySetE (address, val);
             }
           if (interactive)
             {
               inoutAdd (address, '<', val);
+              for (int i = 0; i < CACHE_LINES; ++i)
+                {
+                  if (cache[i].valid && cache[i].tag == (address / LINE_SIZE))
+                    {
+                      cache[i].data[address % 100] = memory[address];
+                      break;
+                    }
+                }
               sc_memorySetE (address, val);
             }
           mt_setbgcolor (BLACK);
